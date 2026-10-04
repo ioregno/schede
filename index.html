@@ -109,7 +109,7 @@ header .range{color:var(--muted);font-size:13px;margin-top:6px}
 .kpi small{font-size:11.5px;color:var(--muted)}
 .top{font-size:15px}
 .bars{display:flex;flex-direction:column;gap:7px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 12px}
-.brow{display:grid;grid-template-columns:92px minmax(0,1fr) 54px;gap:8px;align-items:center;font-size:13px}
+.brow{display:grid;grid-template-columns:88px minmax(0,1fr) 72px;gap:8px;align-items:center;font-size:13px}
 .track{height:12px;border-radius:6px;background:var(--sunk);overflow:hidden}
 .fill{height:100%;border-radius:6px;background:var(--ink);min-width:0}
 .brow.zero{color:var(--muted)}
@@ -143,12 +143,16 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 .close{align-self:stretch}
 .addrow{display:grid;grid-template-columns:minmax(0,1fr) 110px;gap:8px}
 .addrow select{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:10px;font-size:15px}
+.demobar{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--g1);color:#fff;font-size:13px}
+.demobar .ghost{background:#fff;color:#16191C;border:0;font-weight:600}
+.linkbtn{border:0;background:none;padding:0;color:var(--g3);font-weight:600;text-decoration:underline;text-underline-offset:3px}
 .toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:999px;font-size:14px;z-index:20;max-width:90vw;text-align:center}
 .peek{position:fixed;z-index:30;width:220px;border-radius:12px;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.25);pointer-events:none;padding:4px}
 .peek img{display:block;width:100%;border-radius:9px}
 @media (prefers-reduced-motion:no-preference){.ex,.day{transition:opacity .2s}}
 </style>
 
+<div class="demobar" id="demoBar" hidden><span><b>Esempio</b> con un anno di allenamenti finti. Non viene salvato nulla.</span><button type="button" class="ghost" id="demoExit">Esci</button></div>
 <div class="wrap" id="app">
   <header>
     <div>
@@ -200,6 +204,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
     <div class="row"><button class="ghost" type="button" id="bkCopy">Copia backup</button></div>
     <textarea id="bkIn" aria-label="Incolla backup" placeholder="Incolla qui il backup"></textarea>
     <div class="row"><button class="ghost" type="button" id="bkImp">Importa</button></div>
+    <p>Vuoi vedere come appare dopo qualche mese di utilizzo? <button type="button" class="linkbtn" id="demoGo2">Apri l'esempio</button></p>
   </details>
 </div>
 
@@ -226,7 +231,8 @@ let state = {sessions: [], deleted: []};
 let ui = {day: null, variant: null, range: 30, checks: {}};
 try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && Array.isArray(s.sessions)) state = {sessions: s.sessions, deleted: s.deleted || []}; } catch (e) {}
 try { const u = JSON.parse(localStorage.getItem(UIKEY)); if (u) ui = Object.assign(ui, u); } catch (e) {}
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+let demo = false, realState = null;
+const save = () => { if (demo) return; try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
 const saveUi = () => { try { localStorage.setItem(UIKEY, JSON.stringify(ui)); } catch (e) {} };
 
 // date locali
@@ -243,8 +249,8 @@ const lastOf = day => sorted().filter(s => s.day === day).pop();
 
 // sincronizzazione con l'account claude.ai (solo dentro claude.ai)
 let col = null, cloud = false;
-function setSync(){ $('sync').innerHTML = cloud ? '<b>Sincronizzato</b> col tuo account claude.ai' : '<b>Salvato su questo dispositivo</b>'; }
-function push(s){ if (!col) return; col.doc(s.id).set({date: s.date, day: s.day, variant: s.variant, at: s.at || Date.now()}).catch(() => {}); }
+function setSync(){ $('sync').innerHTML = demo ? '<b class="t-g1">Dati di esempio</b>, niente viene salvato' : cloud ? '<b>Sincronizzato</b> col tuo account claude.ai' : '<b>Salvato su questo dispositivo</b>'; }
+function push(s){ if (!col || demo) return; col.doc(s.id).set({date: s.date, day: s.day, variant: s.variant, at: s.at || Date.now()}).catch(() => {}); }
 async function connect(){
   if (!window.claude || !window.claude.use) return;
   try {
@@ -254,13 +260,15 @@ async function connect(){
     col = db.collection('data/users/' + uid);
     col.onSnapshot(snap => {
       const remote = snap.docs.filter(d => d.exists).map(d => Object.assign({id: d.id}, d.data())).filter(s => s.date && s.day && s.variant);
-      const ids = new Set(remote.map(s => s.id)), dels = new Set(state.deleted);
-      const pend = state.sessions.filter(s => s.pending && !ids.has(s.id));
-      pend.forEach(push);
-      state.deleted.forEach(id => { if (ids.has(id)) col.doc(id).delete().catch(() => {}); });
-      state.deleted = state.deleted.filter(id => ids.has(id));
-      state.sessions = remote.filter(s => !dels.has(s.id)).concat(pend);
-      cloud = true; save(); setSync(); render();
+      const T = demo ? realState : state;
+      const ids = new Set(remote.map(s => s.id)), dels = new Set(T.deleted);
+      const pend = T.sessions.filter(s => s.pending && !ids.has(s.id));
+      if (!demo) pend.forEach(push);
+      T.deleted.forEach(id => { if (ids.has(id) && !demo) col.doc(id).delete().catch(() => {}); });
+      T.deleted = T.deleted.filter(id => ids.has(id));
+      T.sessions = remote.filter(s => !dels.has(s.id)).concat(pend);
+      cloud = true; setSync();
+      if (!demo) { save(); render(); } else { try { localStorage.setItem(KEY, JSON.stringify(realState)); } catch (e) {} }
     }, () => { cloud = false; setSync(); });
   } catch (e) {}
 }
@@ -270,8 +278,32 @@ function addSession(date, day, variant){
 }
 function removeSession(id){
   state.sessions = state.sessions.filter(s => s.id !== id);
-  if (col) { state.deleted.push(id); col.doc(id).delete().catch(() => {}); }
+  if (col && !demo) { state.deleted.push(id); col.doc(id).delete().catch(() => {}); }
   save(); render();
+}
+
+// modalità esempio: un anno di allenamenti finti, solo in memoria
+function demoSessions(){
+  const out = [], order = DAYS.map(d => d.id), lastV = {};
+  const t = today(); let k = 0, n = 0;
+  let mon = monday(addDays(t, -364));
+  const slots = [[0,1,3,5],[0,2,3,5],[0,1,3,4],[1,2,4,5],[0,2,4]];
+  for (let w = 0; mon <= t; w++, mon = addDays(mon, 7)) {
+    if (w % 9 === 4) continue;                      // ogni tanto una settimana saltata
+    for (const off of slots[w % slots.length]) {
+      const d = addDays(mon, off); if (d >= t) break;
+      const day = order[k++ % order.length];
+      const v = lastV[day] === 'A' ? 'B' : 'A'; lastV[day] = v;
+      out.push({id: 'demo' + (n++), date: iso(d), day, variant: v, at: n});
+    }
+  }
+  return out;
+}
+function setDemo(on){
+  if (on === demo) return;
+  if (on) { realState = state; state = {sessions: demoSessions(), deleted: []}; demo = true; }
+  else { state = realState || state; realState = null; demo = false; }
+  $('demoBar').hidden = !demo; ui.day = null; setSync(); render(); scrollTo(0, 0);
 }
 
 // consiglio del giorno
@@ -368,11 +400,12 @@ function stats(days){
 function renderStats(){
   document.querySelectorAll('#rng button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.r === ui.range));
   const st = stats(ui.range);
-  if (!st.ss.length) { $('statbody').innerHTML = '<div class="empty">Ancora nessun allenamento in questo periodo. Quando premi <b>Segna fatto oggi</b>, qui vedi quante serie hai fatto per ogni muscolo e quale hai allenato di più.</div>'; return; }
+  if (!st.ss.length) { $('statbody').innerHTML = '<div class="empty">Ancora nessun allenamento in questo periodo. Quando premi <b>Segna fatto oggi</b>, qui vedi quante serie hai fatto per ogni muscolo e quale hai allenato di più. <button type="button" class="linkbtn" id="demoGo">Guarda un esempio</button></div>'; return; }
   const rows = D.gruppi.map(g => ({g, v: st.sets[g], n: st.sess[g].size})).sort((a,b) => b.v - a.v);
   const max = rows[0].v || 1;
   const nA = st.ss.filter(s => s.variant === 'A').length, nB = st.ss.length - nA;
-  const perWeek = (st.ss.length / (ui.range/7)).toFixed(1).replace('.', ',');
+  const first = sorted()[0].date, span = Math.min(ui.range, diffDays(first, iso(today())) + 1);
+  const perWeek = (st.ss.length / Math.max(span / 7, 1)).toFixed(1).replace('.', ',');
   const low = rows.filter(r => r.v > 0).pop();
   let h = '<div class="kpis"><div class="kpi"><span class="num">' + st.ss.length + '</span><small>allenamenti</small></div>' +
           '<div class="kpi"><span class="num">' + perWeek + '</span><small>a settimana</small></div>' +
@@ -466,7 +499,9 @@ let lastDay = iso(today());
 setInterval(() => { if (iso(today()) !== lastDay) { lastDay = iso(today()); ui.day = null; render(); } }, 60000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden && iso(today()) !== lastDay) { lastDay = iso(today()); ui.day = null; render(); } });
 
+document.addEventListener('click', e => { if (e.target.id === 'demoGo' || e.target.id === 'demoGo2') setDemo(true); if (e.target.id === 'demoExit') setDemo(false); });
 setSync(); render(); connect();
+if (location.hash === '#esempio') setDemo(true);
 })();
 </script>
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}</script>
