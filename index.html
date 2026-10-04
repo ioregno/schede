@@ -12,7 +12,7 @@
 :root{
   --bg:#EDEFEB; --surface:#FFFFFF; --sunk:#E2E5E0; --ink:#16191C; --muted:#5C636A; --line:#D3D8D2;
   --btn:#16191C; --btn-ink:#FFFFFF;
-  --g1:#CF4129; --g2:#0D8676; --g3:#3254D1; --g4:#B87C08;
+  --g1:#CF4129; --g2:#0D8676; --g3:#3254D1; --g4:#B87C08; --ok:#2B9A4A;
   --display:"DIN Condensed","Avenir Next Condensed","Arial Narrow","Roboto Condensed","Liberation Sans",sans-serif;
   --body:-apple-system,BlinkMacSystemFont,system-ui,"Segoe UI",Roboto,"Liberation Sans",sans-serif;
   --r:14px;
@@ -20,11 +20,11 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0F1113; --surface:#191C20; --sunk:#23272C; --ink:#ECEEEA; --muted:#9BA2A9; --line:#2C3137;
   --btn:#ECEEEA; --btn-ink:#121416;
-  --g1:#F06B54; --g2:#2DB5A2; --g3:#7088FF; --g4:#E5AA37; color-scheme:dark}}
+  --g1:#F06B54; --g2:#2DB5A2; --g3:#7088FF; --g4:#E5AA37; --ok:#46C46A; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0F1113; --surface:#191C20; --sunk:#23272C; --ink:#ECEEEA; --muted:#9BA2A9; --line:#2C3137;
   --btn:#ECEEEA; --btn-ink:#121416;
-  --g1:#F06B54; --g2:#2DB5A2; --g3:#7088FF; --g4:#E5AA37; color-scheme:dark}
+  --g1:#F06B54; --g2:#2DB5A2; --g3:#7088FF; --g4:#E5AA37; --ok:#46C46A; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
@@ -54,6 +54,13 @@ header .range{color:var(--muted);font-size:13px;margin-top:6px}
 .c-g1{background:var(--g1)}.c-g2{background:var(--g2)}.c-g3{background:var(--g3)}.c-g4{background:var(--g4)}
 .t-g1{color:var(--g1)}.t-g2{color:var(--g2)}.t-g3{color:var(--g3)}.t-g4{color:var(--g4)}
 .weeksum{font-size:14px;color:var(--muted);margin-top:10px}
+.motto{font:700 24px/1.12 var(--display);text-wrap:balance;margin:0 0 10px}
+.boxes{display:flex;align-items:center;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.box{width:34px;height:34px;border-radius:8px;border:2px dashed var(--line);display:grid;place-items:center;font:700 16px/1 var(--display);color:var(--muted)}
+.box.on{background:var(--ok);border:2px solid var(--ok);color:#fff}
+.boxes .bl{font-size:13px;color:var(--muted);margin-left:6px}
+.boxes .bl b{color:var(--ink)}
+@media (prefers-reduced-motion:no-preference){.box.on{animation:pop .35s ease-out both}@keyframes pop{from{transform:scale(.6)}to{transform:scale(1)}}}
 .weeksum b{color:var(--ink)}
 .cover{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
 .cov{border-radius:10px;padding:8px 8px 7px;background:var(--sunk);font-size:12px;min-width:0}
@@ -91,18 +98,23 @@ header .range{color:var(--muted);font-size:13px;margin-top:6px}
 .sets .num{font-size:26px;line-height:1;display:block}
 .sets small{font-size:11px;color:var(--muted)}
 .extra{font-size:13px;color:var(--muted);margin:0}
-.kgrow{grid-column:2 / -1;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:2px}
+.kgrow{grid-column:2 / -1;display:flex;align-items:center;gap:8px 8px;flex-wrap:wrap;margin-top:2px}
 .kgbox{display:flex;align-items:center;background:var(--sunk);border-radius:10px;overflow:hidden}
-.kgbox button{border:0;background:none;width:38px;height:38px;font:700 20px/1 var(--display);color:var(--ink)}
-.kgbox input{width:58px;border:0;background:transparent;text-align:right;font:700 20px/1 var(--display);padding:8px 0;color:var(--ink);font-variant-numeric:tabular-nums}
+.kgbox button{border:0;background:none;width:34px;height:38px;font:700 20px/1 var(--display);color:var(--ink)}
+.kgbox input{width:50px;border:0;background:transparent;text-align:right;font:700 20px/1 var(--display);padding:8px 0;color:var(--ink);font-variant-numeric:tabular-nums}
 .kgbox span{font-size:12px;color:var(--muted);padding:0 4px 0 3px}
 .kgbox input::placeholder{color:var(--muted);opacity:.6}
 .quick{display:flex;gap:5px}
+.reps{display:flex;align-items:center;gap:5px}
+.reps span{font-size:12px;color:var(--muted);margin-right:2px}
+.reps button{border:1px solid var(--line);background:var(--surface);border-radius:9px;width:40px;height:38px;font:700 16px/1 var(--display);color:var(--ink)}
+.reps button.on{background:var(--g3);border-color:var(--g3);color:#fff}
+.last span i{font-style:normal;font-size:12px;color:var(--g3);margin-left:1px}
 .quick button{border:1px solid var(--line);background:var(--surface);border-radius:9px;min-width:42px;height:38px;padding:0 7px;font:700 16px/1 var(--display);color:var(--ink);font-variant-numeric:tabular-nums}
 .quick button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .last{display:flex;gap:6px;min-width:0}
-.last span{display:flex;flex-direction:column;align-items:center;font:700 14px/1.1 var(--display);font-variant-numeric:tabular-nums;border:1px solid var(--line);border-radius:8px;padding:4px 6px 3px;min-width:42px}
-.last span small{font:500 10px/1.2 var(--body);color:var(--muted)}
+.last span{display:grid;grid-template-columns:auto auto;justify-items:center;align-items:baseline;font:700 14px/1.1 var(--display);font-variant-numeric:tabular-nums;border:1px solid var(--line);border-radius:8px;padding:4px 6px 3px;min-width:42px}
+.last span small{grid-column:1 / -1;font:500 10px/1.2 var(--body);color:var(--muted)}
 .last em{font-style:normal;font-size:12px;color:var(--muted)}
 
 /* barra in basso */
@@ -219,6 +231,8 @@ dialog.full{margin:0;width:100%;max-width:none;height:100%;max-height:none;borde
   </header>
 
   <section aria-label="Questa settimana">
+    <div class="motto" id="motto"></div>
+    <div class="boxes" id="boxes"></div>
     <div class="week" id="week"></div>
     <div class="cover" id="cover"></div>
     <div class="weeksum" id="weeksum"></div>
@@ -316,11 +330,14 @@ function setQuality(id, q){
 const exKey = e => e.slug ? e.slug + (e.nome ? '|' + e.nome : '') : 'x|' + e.nome;
 const hkey = k => { let h = 5381; for (const c of k) h = ((h * 33) ^ c.charCodeAt(0)) >>> 0; return h.toString(36); };
 const fkg = v => (Math.round(v * 10) / 10).toString().replace('.', ',');
-function pushKg(k){ if (!col || demo) return; col.doc(k.id).set({kind: 'kg', date: k.date, key: k.key, kg: k.kg}).then(() => { k.pending = false; save(); }).catch(() => {}); }
-function setKg(key, val){
+function pushKg(k){ if (!col || demo) return; col.doc(k.id).set(Object.assign({kind: 'kg', date: k.date, key: k.key, kg: k.kg}, k.rip ? {rip: k.rip} : {})).then(() => { k.pending = false; save(); }).catch(() => {}); }
+function setKg(key, val, rip){
   const t = iso(today()), id = 'kg_' + t + '_' + hkey(key);
+  const old = (state.kg || []).find(k => k.id === id);
+  const kg = val === undefined ? (old ? old.kg : 0) : val;
+  const r = rip === undefined ? (old ? old.rip : 0) : rip;
   state.kg = (state.kg || []).filter(k => k.id !== id);
-  if (val > 0) { const k = {id, date: t, key, kg: val, pending: true}; state.kg.push(k); pushKg(k); }
+  if (kg > 0 || r > 0) { const k = {id, date: t, key, kg: kg > 0 ? kg : 0, pending: true}; if (r > 0) k.rip = r; state.kg.push(k); pushKg(k); }
   else if (col && !demo) col.doc(id).delete().catch(() => {});
   save();
 }
@@ -346,7 +363,7 @@ async function connect(){
       const rk = all.filter(k => k.kind === 'kg' && k.key && k.date), rkIds = new Set(rk.map(k => k.id));
       const pk = (T.kg || []).filter(k => k.pending && !rkIds.has(k.id));
       if (!demo) pk.forEach(pushKg);
-      T.kg = rk.map(({id, date, key, kg}) => ({id, date, key, kg})).concat(pk);
+      T.kg = rk.map(({id, date, key, kg, rip}) => ({id, date, key, kg, rip})).concat(pk);
       const ids = new Set(remote.map(s => s.id)), dels = new Set(T.deleted);
       const pend = T.sessions.filter(s => s.pending && !ids.has(s.id));
       if (!demo) pend.forEach(push);
@@ -436,7 +453,7 @@ function demoKg(ss){
     const key = exKey(e); if (base[key] === undefined) base[key] = [50, 40, 35, 25, 20, 30][i] * (s.day === 'g2' || s.day === 'g4' ? 1.6 : 1);
     seen[key] = (seen[key] || 0) + 1;
     if (seen[key] % 2 === 0) base[key] += 2.5;          // progressione: +2,5 kg ogni due volte
-    out.push({id: 'kg_' + s.date + '_' + hkey(key), date: s.date, key, kg: Math.round(base[key] / 2.5) * 2.5});
+    out.push({id: 'kg_' + s.date + '_' + hkey(key), date: s.date, key, kg: Math.round(base[key] / 2.5) * 2.5, rip: [10, 10, 12, 8, 10, 12, 8][(seen[key] + i) % 7]});
   }));
   return out;
 }
@@ -474,6 +491,23 @@ function suggest(){
   return {day, variant, why};
 }
 
+// frase ironica: dipende da quanti allenamenti hai fatto e da che giorno è
+const OBIETTIVO = 4;
+const GGL = ['lunedì','martedì','mercoledì','giovedì','venerdì','sabato','domenica'];
+function motto(n, dow, todayDone, wk){
+  const rem = 7 - dow - (todayDone ? 1 : 0), need = OBIETTIVO - n, g = GGL[dow];
+  const pick = a => a[wk % a.length];
+  if (n > OBIETTIVO) return pick(['Più di ' + OBIETTIVO + ' allenamenti? Calma, i muscoli crescono anche sul divano.', n + ' allenamenti in una settimana. Alla Green Theory ti stanno preparando una targa.']);
+  if (n === OBIETTIVO) return pick(['Settimana chiusa, ' + OBIETTIVO + ' su ' + OBIETTIVO + '. Il divano ti aspetta, te lo sei guadagnato.', OBIETTIVO + ' su ' + OBIETTIVO + '. Ora puoi lamentarti dei DOMS con cognizione di causa.']);
+  if (todayDone) return pick(['Oggi fatto. Ora mangia, dormi e vantati con moderazione.', 'Allenamento di oggi in cassaforte. Le proteine non si mangiano da sole.']);
+  if (need > rem + (todayDone ? 0 : 0) && need > 7 - dow) return pick(['Mancano ' + need + ' allenamenti e ' + (7 - dow === 1 ? 'un solo giorno' : (7 - dow) + ' giorni') + '. Servirebbe un miracolo, o una doppia.', 'Ne mancano ' + need + ' in ' + (7 - dow === 1 ? 'un giorno' : (7 - dow) + ' giorni') + ': anche ottimista, è dura. Vai e limita i danni.']);
+  if (need === 7 - dow) return pick(['Da qui ogni giorno conta: ' + need + ' allenamenti in ' + need + ' giorni. Niente scuse.', need + ' giorni, ' + need + ' allenamenti. Il calendario ha deciso per te.']);
+  if (n === 0 && dow <= 1) return pick(['Settimana nuova, scheda pulita. La palestra non si allena da sola.', 'È ' + g + ': perfetto per iniziare, pessimo per rimandare.']);
+  if (n === 0) return pick(['È ' + g + ' e zero allenamenti. La cyclette ha chiesto di te.', g.charAt(0).toUpperCase() + g.slice(1) + ', zero allenamenti. I manubri iniziano a fare domande.']);
+  const atteso = Math.ceil((dow + 1) * OBIETTIVO / 7);
+  if (n >= atteso) return pick([n + ' su ' + OBIETTIVO + ' ed è ' + g + ': in perfetta tabella di marcia.', 'In linea coi piani, ' + n + ' su ' + OBIETTIVO + '. Continua così e l\'estate non ti spaventa.']);
+  return pick([n + ' su ' + OBIETTIVO + ' ed è già ' + g + '. Il tempo stringe, i bicipiti no.', 'Siamo a ' + g + ' e sei a ' + n + '. La scheda ti guarda con aria delusa.']);
+}
 function renderWeek(){
   const t = today(), mon = monday(t), tIso = iso(t);
   const sun = addDays(mon, 6);
@@ -491,7 +525,13 @@ function renderWeek(){
   $('week').innerHTML = h;
   const done = new Set(wkS.map(s => s.day));
   $('cover').innerHTML = DAYS.map(d => '<div class="cov ' + (done.has(d.id) ? 'done' : 'todo') + '"><span class="num t-' + d.id + '">' + esc(d.breve) + '</span>' + esc(d.gruppi.slice(0,2).join(', ')) + '</div>').join('');
-  const n = wkS.length;
+  const n = wkS.length, dow = (t.getDay() + 6) % 7;
+  $('motto').textContent = motto(n, dow, wkS.some(s => s.date === tIso), isoWeek(t));
+  let bx = '';
+  for (let i = 0; i < Math.max(OBIETTIVO, n); i++) bx += '<span class="box' + (i < n ? ' on' : '') + '">' + (i < n ? '✓' : i + 1) + '</span>';
+  $('boxes').innerHTML = bx + '<span class="bl"><b>' + n + ' su ' + OBIETTIVO + '</b> questa settimana</span>';
+  $('boxes').setAttribute('aria-label', n + ' allenamenti su ' + OBIETTIVO + ' questa settimana');
+  $('weeksum').hidden = true;
   $('weeksum').innerHTML = n ? '<b>' + n + (n === 1 ? ' allenamento' : ' allenamenti') + '</b> questa settimana.' : 'Nessun allenamento segnato questa settimana.';
 }
 
@@ -513,11 +553,13 @@ function exName(e){ return e.nome || (e.slug && M[e.slug] ? M[e.slug].nome : '')
 function kgRow(e){
   const key = exKey(e), t = iso(today()), h = kgHistory(key);
   const now = h.find(k => k.date === t), prev = h.filter(k => k.date < t).slice(0, 3);
-  const last = prev.length ? prev.map(k => '<span>' + fkg(k.kg) + '<small>' + fmt(k.date) + '</small></span>').join('') : '<em>prima volta</em>';
+  const pk = h.filter(k => k.date < t && k.kg > 0)[0];
+  const last = prev.length ? prev.map(k => '<span>' + (k.kg > 0 ? fkg(k.kg) : '–') + (k.rip ? '<i>×' + k.rip + '</i>' : '') + '<small>' + fmt(k.date) + '</small></span>').join('') : '<em>prima volta</em>';
+  const reps = '<div class="reps" role="group" aria-label="ripetizioni medie">' + [8, 10, 12].map(r => '<button type="button" data-rip="' + r + '" data-key="' + esc(key) + '" class="' + (now && now.rip === r ? 'on' : '') + '" aria-pressed="' + !!(now && now.rip === r) + '" aria-label="' + r + ' ripetizioni">×' + r + '</button>').join('') + '</div>';
   return '<div class="kgrow"><div class="kgbox"><button type="button" data-kgstep="-2.5" data-key="' + esc(key) + '" aria-label="meno 2,5 kg">−</button>' +
-    '<input type="text" inputmode="decimal" class="kgin" data-key="' + esc(key) + '" aria-label="kg di oggi" value="' + (now ? fkg(now.kg) : '') + '" placeholder="' + (prev[0] ? fkg(prev[0].kg) : '0') + '"><span>kg</span>' +
+    '<input type="text" inputmode="decimal" class="kgin" data-key="' + esc(key) + '" aria-label="kg di oggi" value="' + (now && now.kg > 0 ? fkg(now.kg) : '') + '" placeholder="' + (pk ? fkg(pk.kg) : '0') + '"><span>kg</span>' +
     '<button type="button" data-kgstep="2.5" data-key="' + esc(key) + '" aria-label="più 2,5 kg">+</button></div>' +
-    (prev[0] ? '<div class="quick" role="group" aria-label="rispetto all\'ultima volta">' + [0, 2.5, 5, 10].map(d => { const v = prev[0].kg + d; return '<button type="button" data-kgset="' + v + '" data-key="' + esc(key) + '" class="' + (now && now.kg === v ? 'on' : '') + '" aria-label="' + fkg(v) + ' kg">' + (d ? '+' + fkg(d) : '=') + '</button>'; }).join('') + '</div>' : '') +
+    reps + (pk ? '<div class="quick" role="group" aria-label="rispetto all\'ultima volta">' + [0, 2.5, 5, 10].map(d => { const v = pk.kg + d; return '<button type="button" data-kgset="' + v + '" data-key="' + esc(key) + '" class="' + (now && now.kg === v ? 'on' : '') + '" aria-label="' + fkg(v) + ' kg">' + (d ? '+' + fkg(d) : '=') + '</button>'; }).join('') + '</div>' : '') +
     '<div class="last" aria-label="ultime 3 volte">' + last + '</div></div>';
 }
 function renderEx(){
@@ -634,6 +676,8 @@ $('exs').addEventListener('change', e => {
 });
 $('exs').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.closest('.kgin')) e.target.blur(); });
 $('exs').addEventListener('click', e => {
+  const rb = e.target.closest('[data-rip]');
+  if (rb) { const cur = kgHistory(rb.dataset.key).find(k => k.date === iso(today())); setKg(rb.dataset.key, undefined, cur && cur.rip === +rb.dataset.rip ? 0 : +rb.dataset.rip); renderEx(); return; }
   const qs = e.target.closest('[data-kgset]');
   if (qs) { setKg(qs.dataset.key, Math.round(+qs.dataset.kgset * 10) / 10); renderEx(); return; }
   const stp = e.target.closest('[data-kgstep]');
@@ -683,7 +727,7 @@ if (window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)').matche
 // backup
 $('notes').innerHTML = D.note.map(n => '<li>' + esc(n) + '</li>').join('');
 $('bkCopy').addEventListener('click', () => {
-  const txt = JSON.stringify({scheda: 'green-theory', kg: (state.kg || []).map(({id,date,key,kg}) => ({id,date,key,kg})), sessions: state.sessions.map(({id,date,day,variant,at,q,cardio,abs}) => ({id,date,day,variant,at,q,cardio,abs}))});
+  const txt = JSON.stringify({scheda: 'green-theory', kg: (state.kg || []).map(({id,date,key,kg,rip}) => ({id,date,key,kg,rip})), sessions: state.sessions.map(({id,date,day,variant,at,q,cardio,abs}) => ({id,date,day,variant,at,q,cardio,abs}))});
   const done = () => toast('Backup copiato');
   const fallback = () => { $('bkIn').value = txt; $('bkIn').select(); toast('Seleziona e copia il testo'); };
   try { navigator.clipboard.writeText(txt).then(done, fallback); } catch (e) { fallback(); }
@@ -693,7 +737,7 @@ $('bkImp').addEventListener('click', () => {
     const j = JSON.parse($('bkIn').value); const have = new Set(state.sessions.map(s => s.id)); let n = 0;
     (j.sessions || []).forEach(s => { if (s && s.id && s.date && BY[s.day] && (s.variant === 'A' || s.variant === 'B') && !have.has(s.id)) { const x = {id: s.id, date: s.date, day: s.day, variant: s.variant, at: s.at || Date.now(), q: [1,2,3].includes(s.q) ? s.q : 0, pending: true}; if (s.cardio && CARDIO[s.cardio.t] && s.cardio.m > 0) x.cardio = {t: s.cardio.t, m: Math.round(s.cardio.m)}; if (s.abs && ABSU[s.abs.u] && s.abs.n > 0) x.abs = {n: Math.round(s.abs.n), u: s.abs.u}; state.sessions.push(x); push(x); n++; } });
     const hk = new Set((state.kg || []).map(k => k.id)); let nk = 0;
-    (j.kg || []).forEach(k => { if (k && k.id && k.date && k.key && k.kg > 0 && !hk.has(k.id)) { const x = {id: k.id, date: k.date, key: k.key, kg: +k.kg, pending: true}; state.kg.push(x); pushKg(x); nk++; } });
+    (j.kg || []).forEach(k => { if (k && k.id && k.date && k.key && (k.kg > 0 || k.rip > 0) && !hk.has(k.id)) { const x = {id: k.id, date: k.date, key: k.key, kg: +k.kg || 0, pending: true}; if ([8,10,12].includes(k.rip)) x.rip = k.rip; state.kg.push(x); pushKg(x); nk++; } });
     save(); render(); $('bkIn').value = ''; toast(n || nk ? 'Importati ' + n + ' allenamenti e ' + nk + ' pesi' : 'Niente di nuovo da importare');
   } catch (e) { toast('Testo non valido: incolla il backup intero'); }
 });
