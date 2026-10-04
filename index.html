@@ -97,6 +97,9 @@ header .range{color:var(--muted);font-size:13px;margin-top:6px}
 .kgbox input{width:58px;border:0;background:transparent;text-align:right;font:700 20px/1 var(--display);padding:8px 0;color:var(--ink);font-variant-numeric:tabular-nums}
 .kgbox span{font-size:12px;color:var(--muted);padding:0 4px 0 3px}
 .kgbox input::placeholder{color:var(--muted);opacity:.6}
+.quick{display:flex;gap:5px}
+.quick button{border:1px solid var(--line);background:var(--surface);border-radius:9px;min-width:42px;height:38px;padding:0 7px;font:700 16px/1 var(--display);color:var(--ink);font-variant-numeric:tabular-nums}
+.quick button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .last{display:flex;gap:6px;min-width:0}
 .last span{display:flex;flex-direction:column;align-items:center;font:700 14px/1.1 var(--display);font-variant-numeric:tabular-nums;border:1px solid var(--line);border-radius:8px;padding:4px 6px 3px;min-width:42px}
 .last span small{font:500 10px/1.2 var(--body);color:var(--muted)}
@@ -513,7 +516,9 @@ function kgRow(e){
   const last = prev.length ? prev.map(k => '<span>' + fkg(k.kg) + '<small>' + fmt(k.date) + '</small></span>').join('') : '<em>prima volta</em>';
   return '<div class="kgrow"><div class="kgbox"><button type="button" data-kgstep="-2.5" data-key="' + esc(key) + '" aria-label="meno 2,5 kg">−</button>' +
     '<input type="text" inputmode="decimal" class="kgin" data-key="' + esc(key) + '" aria-label="kg di oggi" value="' + (now ? fkg(now.kg) : '') + '" placeholder="' + (prev[0] ? fkg(prev[0].kg) : '0') + '"><span>kg</span>' +
-    '<button type="button" data-kgstep="2.5" data-key="' + esc(key) + '" aria-label="più 2,5 kg">+</button></div><div class="last" aria-label="ultime 3 volte">' + last + '</div></div>';
+    '<button type="button" data-kgstep="2.5" data-key="' + esc(key) + '" aria-label="più 2,5 kg">+</button></div>' +
+    (prev[0] ? '<div class="quick" role="group" aria-label="rispetto all\'ultima volta">' + [0, 2.5, 5, 10].map(d => { const v = prev[0].kg + d; return '<button type="button" data-kgset="' + v + '" data-key="' + esc(key) + '" class="' + (now && now.kg === v ? 'on' : '') + '" aria-label="' + fkg(v) + ' kg">' + (d ? '+' + fkg(d) : '=') + '</button>'; }).join('') + '</div>' : '') +
+    '<div class="last" aria-label="ultime 3 volte">' + last + '</div></div>';
 }
 function renderEx(){
   const list = BY[ui.day][ui.variant];
@@ -629,6 +634,8 @@ $('exs').addEventListener('change', e => {
 });
 $('exs').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.closest('.kgin')) e.target.blur(); });
 $('exs').addEventListener('click', e => {
+  const qs = e.target.closest('[data-kgset]');
+  if (qs) { setKg(qs.dataset.key, Math.round(+qs.dataset.kgset * 10) / 10); renderEx(); return; }
   const stp = e.target.closest('[data-kgstep]');
   if (stp) {
     const inp = stp.parentNode.querySelector('.kgin');
