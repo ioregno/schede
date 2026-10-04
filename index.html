@@ -91,6 +91,16 @@ header .range{color:var(--muted);font-size:13px;margin-top:6px}
 .sets .num{font-size:26px;line-height:1;display:block}
 .sets small{font-size:11px;color:var(--muted)}
 .extra{font-size:13px;color:var(--muted);margin:0}
+.kgrow{grid-column:2 / -1;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:2px}
+.kgbox{display:flex;align-items:center;background:var(--sunk);border-radius:10px;overflow:hidden}
+.kgbox button{border:0;background:none;width:38px;height:38px;font:700 20px/1 var(--display);color:var(--ink)}
+.kgbox input{width:58px;border:0;background:transparent;text-align:right;font:700 20px/1 var(--display);padding:8px 0;color:var(--ink);font-variant-numeric:tabular-nums}
+.kgbox span{font-size:12px;color:var(--muted);padding:0 4px 0 3px}
+.kgbox input::placeholder{color:var(--muted);opacity:.6}
+.last{display:flex;gap:6px;min-width:0}
+.last span{display:flex;flex-direction:column;align-items:center;font:700 14px/1.1 var(--display);font-variant-numeric:tabular-nums;border:1px solid var(--line);border-radius:8px;padding:4px 6px 3px;min-width:42px}
+.last span small{font:500 10px/1.2 var(--body);color:var(--muted)}
+.last em{font-style:normal;font-size:12px;color:var(--muted)}
 
 /* barra in basso */
 .bar{position:fixed;left:0;right:0;bottom:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);z-index:5}
@@ -270,9 +280,9 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 const MESI = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
 const GG = ['lun','mar','mer','gio','ven','sab','dom'];
 
-let state = {sessions: [], deleted: []};
+let state = {sessions: [], deleted: [], kg: []};
 let ui = {day: null, variant: null, range: 30, checks: {}};
-try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && Array.isArray(s.sessions)) state = {sessions: s.sessions, deleted: s.deleted || []}; } catch (e) {}
+try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && Array.isArray(s.sessions)) state = {sessions: s.sessions, deleted: s.deleted || [], kg: Array.isArray(s.kg) ? s.kg : []}; } catch (e) {}
 try { const u = JSON.parse(localStorage.getItem(UIKEY)); if (u) ui = Object.assign(ui, u); } catch (e) {}
 let demo = false, realState = null;
 const save = () => { if (demo) return; try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
@@ -299,6 +309,19 @@ function setQuality(id, q){
   const s = state.sessions.find(x => x.id === id); if (!s) return;
   s.q = s.q === q ? 0 : q; save(); push(s); render();
 }
+// kg per esercizio: una voce al giorno per esercizio, storico per le ultime 3 volte
+const exKey = e => e.slug ? e.slug + (e.nome ? '|' + e.nome : '') : 'x|' + e.nome;
+const hkey = k => { let h = 5381; for (const c of k) h = ((h * 33) ^ c.charCodeAt(0)) >>> 0; return h.toString(36); };
+const fkg = v => (Math.round(v * 10) / 10).toString().replace('.', ',');
+function pushKg(k){ if (!col || demo) return; col.doc(k.id).set({kind: 'kg', date: k.date, key: k.key, kg: k.kg}).then(() => { k.pending = false; save(); }).catch(() => {}); }
+function setKg(key, val){
+  const t = iso(today()), id = 'kg_' + t + '_' + hkey(key);
+  state.kg = (state.kg || []).filter(k => k.id !== id);
+  if (val > 0) { const k = {id, date: t, key, kg: val, pending: true}; state.kg.push(k); pushKg(k); }
+  else if (col && !demo) col.doc(id).delete().catch(() => {});
+  save();
+}
+function kgHistory(key){ return (state.kg || []).filter(k => k.key === key).sort((a, b) => a.date < b.date ? 1 : -1); }
 function starsHtml(s, label){
   let h = '<span class="stars" role="group" aria-label="' + (label || 'Qualità') + '">';
   for (let k = 1; k <= 3; k++) h += '<button type="button" class="st' + ((s.q || 0) >= k ? ' on' : '') + '" data-star="' + s.id + '" data-q="' + k + '" aria-label="' + k + (k === 1 ? ' stella' : ' stelle') + '" aria-pressed="' + ((s.q || 0) >= k) + '">★</button>';
@@ -314,8 +337,13 @@ async function connect(){
     const uid = await user.id(); if (!uid) return;
     col = db.collection('data/users/' + uid);
     col.onSnapshot(snap => {
-      const remote = snap.docs.filter(d => d.exists).map(d => Object.assign({id: d.id}, d.data())).filter(s => s.date && s.day && s.variant);
+      const all = snap.docs.filter(d => d.exists).map(d => Object.assign({id: d.id}, d.data()));
+      const remote = all.filter(s => s.date && s.day && s.variant);
       const T = demo ? realState : state;
+      const rk = all.filter(k => k.kind === 'kg' && k.key && k.date), rkIds = new Set(rk.map(k => k.id));
+      const pk = (T.kg || []).filter(k => k.pending && !rkIds.has(k.id));
+      if (!demo) pk.forEach(pushKg);
+      T.kg = rk.map(({id, date, key, kg}) => ({id, date, key, kg})).concat(pk);
       const ids = new Set(remote.map(s => s.id)), dels = new Set(T.deleted);
       const pend = T.sessions.filter(s => s.pending && !ids.has(s.id));
       if (!demo) pend.forEach(push);
@@ -399,9 +427,19 @@ function demoSessions(){
   }
   return out;
 }
+function demoKg(ss){
+  const out = [], base = {}, seen = {};
+  ss.forEach((s, n) => (BY[s.day][s.variant] || []).forEach((e, i) => {
+    const key = exKey(e); if (base[key] === undefined) base[key] = [50, 40, 35, 25, 20, 30][i] * (s.day === 'g2' || s.day === 'g4' ? 1.6 : 1);
+    seen[key] = (seen[key] || 0) + 1;
+    if (seen[key] % 2 === 0) base[key] += 2.5;          // progressione: +2,5 kg ogni due volte
+    out.push({id: 'kg_' + s.date + '_' + hkey(key), date: s.date, key, kg: Math.round(base[key] / 2.5) * 2.5});
+  }));
+  return out;
+}
 function setDemo(on){
   if (on === demo) return;
-  if (on) { realState = state; state = {sessions: demoSessions(), deleted: []}; demo = true; }
+  if (on) { realState = state; const ds = demoSessions(); state = {sessions: ds, deleted: [], kg: demoKg(ds)}; demo = true; }
   else { state = realState || state; realState = null; demo = false; }
   $('demoBar').hidden = !demo; ui.day = null; setSync(); render(); scrollTo(0, 0);
 }
@@ -469,6 +507,14 @@ function renderPick(){
 }
 
 function exName(e){ return e.nome || (e.slug && M[e.slug] ? M[e.slug].nome : ''); }
+function kgRow(e){
+  const key = exKey(e), t = iso(today()), h = kgHistory(key);
+  const now = h.find(k => k.date === t), prev = h.filter(k => k.date < t).slice(0, 3);
+  const last = prev.length ? prev.map(k => '<span>' + fkg(k.kg) + '<small>' + fmt(k.date) + '</small></span>').join('') : '<em>prima volta</em>';
+  return '<div class="kgrow"><div class="kgbox"><button type="button" data-kgstep="-2.5" data-key="' + esc(key) + '" aria-label="meno 2,5 kg">−</button>' +
+    '<input type="text" inputmode="decimal" class="kgin" data-key="' + esc(key) + '" aria-label="kg di oggi" value="' + (now ? fkg(now.kg) : '') + '" placeholder="' + (prev[0] ? fkg(prev[0].kg) : '0') + '"><span>kg</span>' +
+    '<button type="button" data-kgstep="2.5" data-key="' + esc(key) + '" aria-label="più 2,5 kg">+</button></div><div class="last" aria-label="ultime 3 volte">' + last + '</div></div>';
+}
 function renderEx(){
   const list = BY[ui.day][ui.variant];
   const ck = ui.checks[iso(today()) + ui.day + ui.variant] || [];
@@ -480,7 +526,7 @@ function renderEx(){
     const meta = m ? esc((m.marca === 'Panatta' ? 'Panatta' : 'Presti') + ' · ' + m.distretto) : 'Green Theory · ' + esc(e.gruppi.join(', '));
     return '<li class="ex' + (ck.includes(i) ? ' done' : '') + '"><button type="button" class="tick" data-i="' + i + '" aria-label="Spunta esercizio ' + (i+1) + '" aria-pressed="' + ck.includes(i) + '">' + (i+1) + '</button>' +
       '<div style="min-width:0">' + nameBtn + '<div class="ex-meta">' + meta + '</div><p class="why">' + esc(e.perche) + '</p></div>' +
-      '<div class="sets"><span class="num">' + e.serie + '×' + esc(e.rip) + '</span><small>serie × rip.</small></div></li>';
+      '<div class="sets"><span class="num">' + e.serie + '×' + esc(e.rip) + '</span><small>serie × rip.</small></div>' + kgRow(e) + '</li>';
   }).join('');
   const t = iso(today());
   const dup = state.sessions.filter(s => s.date === t && s.day === ui.day && s.variant === ui.variant).pop();
@@ -576,7 +622,19 @@ function toast(msg){ const t = $('toast'); t.textContent = msg; t.hidden = false
 $('selDay').addEventListener('change', e => { ui.day = e.target.value; ui.pickDate = iso(today()); const l = lastOf(ui.day); ui.variant = l ? (l.variant === 'A' ? 'B' : 'A') : 'A'; saveUi(); renderPick(); renderEx(); });
 $('seg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; ui.variant = b.dataset.v; ui.pickDate = iso(today()); saveUi(); renderPick(); renderEx(); });
 $('rng').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; ui.range = +b.dataset.r; saveUi(); renderStats(); });
+$('exs').addEventListener('change', e => {
+  const inp = e.target.closest('.kgin'); if (!inp) return;
+  const v = parseFloat(inp.value.replace(',', '.'));
+  setKg(inp.dataset.key, isFinite(v) && v > 0 && v < 1000 ? Math.round(v * 10) / 10 : 0); renderEx();
+});
+$('exs').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.closest('.kgin')) e.target.blur(); });
 $('exs').addEventListener('click', e => {
+  const stp = e.target.closest('[data-kgstep]');
+  if (stp) {
+    const inp = stp.parentNode.querySelector('.kgin');
+    const cur = parseFloat((inp.value || inp.placeholder).replace(',', '.')) || 0;
+    setKg(stp.dataset.key, Math.max(0, Math.round((cur + +stp.dataset.kgstep) * 10) / 10)); renderEx(); return;
+  }
   const n = e.target.closest('.ex-name[data-slug]'); if (n) { hidePeek(); openMachine(n.dataset.slug, n.dataset.label); return; }
   const t = e.target.closest('.tick'); if (!t) return;
   const k = iso(today()) + ui.day + ui.variant, i = +t.dataset.i;
@@ -618,7 +676,7 @@ if (window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)').matche
 // backup
 $('notes').innerHTML = D.note.map(n => '<li>' + esc(n) + '</li>').join('');
 $('bkCopy').addEventListener('click', () => {
-  const txt = JSON.stringify({scheda: 'green-theory', sessions: state.sessions.map(({id,date,day,variant,at,q,cardio,abs}) => ({id,date,day,variant,at,q,cardio,abs}))});
+  const txt = JSON.stringify({scheda: 'green-theory', kg: (state.kg || []).map(({id,date,key,kg}) => ({id,date,key,kg})), sessions: state.sessions.map(({id,date,day,variant,at,q,cardio,abs}) => ({id,date,day,variant,at,q,cardio,abs}))});
   const done = () => toast('Backup copiato');
   const fallback = () => { $('bkIn').value = txt; $('bkIn').select(); toast('Seleziona e copia il testo'); };
   try { navigator.clipboard.writeText(txt).then(done, fallback); } catch (e) { fallback(); }
@@ -627,7 +685,9 @@ $('bkImp').addEventListener('click', () => {
   try {
     const j = JSON.parse($('bkIn').value); const have = new Set(state.sessions.map(s => s.id)); let n = 0;
     (j.sessions || []).forEach(s => { if (s && s.id && s.date && BY[s.day] && (s.variant === 'A' || s.variant === 'B') && !have.has(s.id)) { const x = {id: s.id, date: s.date, day: s.day, variant: s.variant, at: s.at || Date.now(), q: [1,2,3].includes(s.q) ? s.q : 0, pending: true}; if (s.cardio && CARDIO[s.cardio.t] && s.cardio.m > 0) x.cardio = {t: s.cardio.t, m: Math.round(s.cardio.m)}; if (s.abs && ABSU[s.abs.u] && s.abs.n > 0) x.abs = {n: Math.round(s.abs.n), u: s.abs.u}; state.sessions.push(x); push(x); n++; } });
-    save(); render(); $('bkIn').value = ''; toast(n ? 'Importati ' + n + ' allenamenti' : 'Niente di nuovo da importare');
+    const hk = new Set((state.kg || []).map(k => k.id)); let nk = 0;
+    (j.kg || []).forEach(k => { if (k && k.id && k.date && k.key && k.kg > 0 && !hk.has(k.id)) { const x = {id: k.id, date: k.date, key: k.key, kg: +k.kg, pending: true}; state.kg.push(x); pushKg(x); nk++; } });
+    save(); render(); $('bkIn').value = ''; toast(n || nk ? 'Importati ' + n + ' allenamenti e ' + nk + ' pesi' : 'Niente di nuovo da importare');
   } catch (e) { toast('Testo non valido: incolla il backup intero'); }
 });
 // a mezzanotte la settimana e il consiglio si aggiornano
