@@ -97,6 +97,14 @@ header .range{color:var(--muted);font-size:13px;margin-top:6px}
 .bar .in{max-width:448px;margin:0 auto}
 .primary{width:100%;border:0;border-radius:14px;background:var(--btn);color:var(--btn-ink);padding:15px 12px 13px;font:700 20px/1 var(--display);letter-spacing:.02em}
 .primary[disabled]{opacity:.5}
+.endbtn{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px 12px 16px}
+.endbtn .dots{display:flex;gap:7px;flex-wrap:wrap}
+.endbtn .dot{width:13px;height:13px;border-radius:50%;border:2px solid currentColor;opacity:.55}
+.endbtn .dot.on{background:currentColor;opacity:1}
+.endbtn .tl{display:flex;flex-direction:column;align-items:flex-end;gap:2px;white-space:nowrap}
+.endbtn .tl small{font:500 11px/1 var(--body);letter-spacing:0;opacity:.75}
+.endbtn.locked,.endbtn.locked[disabled]{background:var(--sunk);color:var(--muted);opacity:1}
+@media (prefers-reduced-motion:no-preference){.endbtn .dot{transition:background .2s,opacity .2s}}
 .ghost{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 12px;font-size:14px}
 
 /* statistiche */
@@ -214,7 +222,7 @@ dialog.full{margin:0;width:100%;max-width:none;height:100%;max-height:none;borde
   </section>
 
   <ol class="exs" id="exs"></ol>
-  <p class="extra">A fine allenamento premi Fine allenamento: segni cardio, addominali extra e com'è andata. Tocca il nome di una macchina per vedere foto ed esecuzione, tocca il cerchio per spuntare l'esercizio.</p>
+  <p class="extra">Spunta gli esercizi che fai: dal 40% si sblocca Termina, dove segni cardio, addominali extra e com'è andata. Tocca il nome di una macchina per vedere foto ed esecuzione, tocca il cerchio per spuntare l'esercizio.</p>
 
   <section class="stats" aria-label="Statistiche">
     <div><div class="eyebrow">Statistiche</div><h2>Cosa alleni di più</h2></div>
@@ -242,7 +250,7 @@ dialog.full{margin:0;width:100%;max-width:none;height:100%;max-height:none;borde
   </details>
 </div>
 
-<div class="bar"><div class="in"><button class="primary" type="button" id="logBtn">Segna fatto oggi</button><div class="rate" id="rate" hidden></div></div></div>
+<div class="bar"><div class="in"><button class="primary endbtn" type="button" id="logBtn">Termina</button><div class="rate" id="rate" hidden></div></div></div>
 
 <dialog id="dlgM"><div class="sheet" id="sheetM"></div></dialog>
 <dialog id="dlgD"><div class="sheet" id="sheetD"></div></dialog>
@@ -478,7 +486,12 @@ function renderEx(){
   const dup = state.sessions.filter(s => s.date === t && s.day === ui.day && s.variant === ui.variant).pop();
   const b = $('logBtn');
   b.hidden = !!dup;
-  b.textContent = 'Fine allenamento · ' + BY[ui.day].breve + ' ' + ui.variant;
+  // un pallino per esercizio; "Termina" si sblocca dal 40% di esercizi spuntati
+  const need = Math.ceil(list.length * 0.4), done = ck.length, ok = done >= need;
+  b.disabled = !ok; b.classList.toggle('locked', !ok);
+  b.setAttribute('aria-label', ok ? 'Termina l\'allenamento' : 'Spunta almeno ' + need + ' esercizi per terminare');
+  b.innerHTML = '<span class="dots" aria-hidden="true">' + list.map((_, i) => '<span class="dot' + (ck.includes(i) ? ' on' : '') + '"></span>').join('') + '</span>' +
+    '<span class="tl">' + 'Termina' + '<small>' + (ok ? done + '/' + list.length + ' esercizi' : 'spunta ancora ' + (need - done)) + '</small></span>';
   $('rate').hidden = !dup;
   if (dup) $('rate').innerHTML = '<span class="lbl">Fatto ✓<small>' + esc(BY[ui.day].breve) + ' ' + ui.variant + (dup.cardio ? ' · ' + CARDIO[dup.cardio.t] + ' ' + dup.cardio.m + '′' : '') + (dup.abs ? ' · addome ' + dup.abs.n + ' ' + ABSU[dup.abs.u] : '') + '</small></span>' + starsHtml(dup, 'Qualità dell\'allenamento di oggi') + '<button type="button" class="ghost" data-recap="' + dup.id + '">Riepilogo</button>';
 }
@@ -502,7 +515,7 @@ function cardioLine(ss){
 function renderStats(){
   document.querySelectorAll('#rng button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.r === ui.range));
   const st = stats(ui.range);
-  if (!st.ss.length) { $('statbody').innerHTML = '<div class="empty">Ancora nessun allenamento in questo periodo. Quando premi <b>Fine allenamento</b>, qui vedi quante serie hai fatto per ogni muscolo e quale hai allenato di più. <button type="button" class="linkbtn" id="demoGo">Guarda un esempio</button></div>'; return; }
+  if (!st.ss.length) { $('statbody').innerHTML = '<div class="empty">Ancora nessun allenamento in questo periodo. Quando premi <b>Termina</b>, qui vedi quante serie hai fatto per ogni muscolo e quale hai allenato di più. <button type="button" class="linkbtn" id="demoGo">Guarda un esempio</button></div>'; return; }
   const rows = D.gruppi.map(g => ({g, v: st.sets[g], n: st.sess[g].size})).sort((a,b) => b.v - a.v);
   const max = rows[0].v || 1;
   const nA = st.ss.filter(s => s.variant === 'A').length, nB = st.ss.length - nA;
