@@ -112,10 +112,12 @@ header .range{color:var(--muted);font-size:13px;margin-top:6px}
 .last span i{font-style:normal;font-size:12px;color:var(--g3);margin-left:1px}
 .quick button{border:1px solid var(--line);background:var(--surface);border-radius:9px;min-width:42px;height:38px;padding:0 7px;font:700 16px/1 var(--display);color:var(--ink);font-variant-numeric:tabular-nums}
 .quick button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.last{display:flex;gap:6px;min-width:0}
-.last span{display:grid;grid-template-columns:auto auto;justify-items:center;align-items:baseline;font:700 14px/1.1 var(--display);font-variant-numeric:tabular-nums;border:1px solid var(--line);border-radius:8px;padding:4px 6px 3px;min-width:42px}
-.last span small{grid-column:1 / -1;font:500 10px/1.2 var(--body);color:var(--muted)}
-.last em{font-style:normal;font-size:12px;color:var(--muted)}
+.last{flex-basis:100%;display:flex;flex-wrap:wrap;gap:2px 10px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.last b{font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-size:10px;align-self:center}
+.last span{color:var(--ink);font-weight:600}
+.last span small{color:var(--muted);font-weight:400;font-size:11px}
+.last span i{font-style:normal;color:var(--g3);font-weight:600}
+.last em{font-style:normal}
 
 /* barra in basso */
 .bar{position:fixed;left:0;right:0;bottom:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);z-index:5}
@@ -554,13 +556,13 @@ function kgRow(e){
   const key = exKey(e), t = iso(today()), h = kgHistory(key);
   const now = h.find(k => k.date === t), prev = h.filter(k => k.date < t).slice(0, 3);
   const pk = h.filter(k => k.date < t && k.kg > 0)[0];
-  const last = prev.length ? prev.map(k => '<span>' + (k.kg > 0 ? fkg(k.kg) : '–') + (k.rip ? '<i>×' + k.rip + '</i>' : '') + '<small>' + fmt(k.date) + '</small></span>').join('') : '<em>prima volta</em>';
+  const dm = d => { const x = parse(d); return x.getDate() + '/' + (x.getMonth() + 1); };
+  const last = prev.length ? prev.map(k => '<span><small>' + dm(k.date) + '</small> ' + (k.kg > 0 ? fkg(k.kg) : '–') + (k.rip ? '<i>×' + k.rip + '</i>' : '') + '</span>').join('') : '<em>prima volta</em>';
   const reps = '<div class="reps" role="group" aria-label="ripetizioni medie">' + [8, 10, 12].map(r => '<button type="button" data-rip="' + r + '" data-key="' + esc(key) + '" class="' + (now && now.rip === r ? 'on' : '') + '" aria-pressed="' + !!(now && now.rip === r) + '" aria-label="' + r + ' ripetizioni">×' + r + '</button>').join('') + '</div>';
   return '<div class="kgrow"><div class="kgbox"><button type="button" data-kgstep="-2.5" data-key="' + esc(key) + '" aria-label="meno 2,5 kg">−</button>' +
     '<input type="text" inputmode="decimal" class="kgin" data-key="' + esc(key) + '" aria-label="kg di oggi" value="' + (now && now.kg > 0 ? fkg(now.kg) : '') + '" placeholder="' + (pk ? fkg(pk.kg) : '0') + '"><span>kg</span>' +
     '<button type="button" data-kgstep="2.5" data-key="' + esc(key) + '" aria-label="più 2,5 kg">+</button></div>' +
-    reps + (pk ? '<div class="quick" role="group" aria-label="rispetto all\'ultima volta">' + [0, 2.5, 5, 10].map(d => { const v = pk.kg + d; return '<button type="button" data-kgset="' + v + '" data-key="' + esc(key) + '" class="' + (now && now.kg === v ? 'on' : '') + '" aria-label="' + fkg(v) + ' kg">' + (d ? '+' + fkg(d) : '=') + '</button>'; }).join('') + '</div>' : '') +
-    '<div class="last" aria-label="ultime 3 volte">' + last + '</div></div>';
+    reps + '<div class="last" aria-label="ultime 3 volte"><b>ultime</b>' + last + '</div></div>';
 }
 function renderEx(){
   const list = BY[ui.day][ui.variant];
