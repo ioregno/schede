@@ -40,6 +40,13 @@ h2{font-size:26px;line-height:1}
 .num{font-variant-numeric:tabular-nums}
 header{display:flex;flex-direction:column;gap:2px}
 header .range{color:var(--muted);font-size:13px;margin-top:6px}
+.wkline{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.yleft{font:700 15px/1.1 var(--display);color:var(--muted);text-align:right}
+.yleft b{font-size:22px;color:var(--ink)}
+.avg{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.avg span{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:4px 8px;font-size:12px;color:var(--muted)}
+.avg b{font:700 16px/1 var(--display);color:var(--ink);font-variant-numeric:tabular-nums}
+.box.on.extra{background:var(--g4);border:2px solid var(--g4);color:#fff}
 .sync{font-size:12px;color:var(--muted)}
 .sync b{color:var(--ink);font-weight:600}
 
@@ -225,9 +232,9 @@ dialog.full{margin:0;width:100%;max-width:none;height:100%;max-height:none;borde
 <div class="wrap" id="app">
   <header>
     <div>
-      <div class="eyebrow">Green Theory · Scheda 4 giorni</div>
-      <h1 id="wk">Settimana</h1>
+      <div class="wkline"><h1 id="wk">Settimana</h1><span class="yleft" id="yleft"></span></div>
       <div class="range" id="wkrange"></div>
+      <div class="avg" id="avg"></div>
       <div class="sync" id="sync"><b>Salvato su questo dispositivo</b></div>
     </div>
   </header>
@@ -530,7 +537,13 @@ function renderWeek(){
   const n = wkS.length, dow = (t.getDay() + 6) % 7;
   $('motto').textContent = motto(n, dow, wkS.some(s => s.date === tIso), isoWeek(t));
   let bx = '';
-  for (let i = 0; i < Math.max(OBIETTIVO, n); i++) bx += '<span class="box' + (i < n ? ' on' : '') + '">' + (i < n ? '✓' : i + 1) + '</span>';
+  for (let i = 0; i < Math.max(OBIETTIVO, n); i++) bx += '<span class="box' + (i >= OBIETTIVO ? ' on extra' : i < n ? ' on' : '') + '">' + (i >= OBIETTIVO ? '+' + (i - OBIETTIVO + 1) : i < n ? '✓' : i + 1) + '</span>';
+  // giorni alla fine dell'anno e media allenamenti a settimana
+  const fine = new Date(t.getFullYear(), 11, 31), gl = Math.round((fine - t) / 864e5);
+  $('yleft').innerHTML = gl ? '<b>' + gl + '</b> ' + (gl === 1 ? 'giorno' : 'giorni') + ' alla fine del ' + t.getFullYear() : 'ultimo giorno del ' + t.getFullYear();
+  const media = days => { const from = iso(addDays(t, -(days - 1))); const ss = state.sessions.filter(s => s.date >= from && s.date <= tIso); if (!ss.length) return null; const first = sorted()[0].date; const span = Math.min(days, diffDays(first, tIso) + 1); return ss.length / Math.max(span / 7, 1); };
+  const m3 = media(91), m12 = media(365);
+  $('avg').innerHTML = '<span>media 3 mesi <b>' + (m3 === null ? '–' : fq(m3)) + '</b>/sett.</span><span>media anno <b>' + (m12 === null ? '–' : fq(m12)) + '</b>/sett.</span>';
   $('boxes').innerHTML = bx + '<span class="bl"><b>' + n + ' su ' + OBIETTIVO + '</b> questa settimana</span>';
   $('boxes').setAttribute('aria-label', n + ' allenamenti su ' + OBIETTIVO + ' questa settimana');
   $('weeksum').hidden = true;
