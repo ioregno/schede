@@ -223,6 +223,8 @@ dialog::backdrop{background:rgba(0,0,0,.42);-webkit-backdrop-filter:blur(3px);ba
 .addrow select,.opt select{width:100%;border:0;border-radius:999px;padding:14px 38px 14px 16px;font:600 15px/1.1 var(--body);-webkit-appearance:none;appearance:none;background:var(--tile) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2.5 5l4.5 4.5L11.5 5' fill='none' stroke='%23707072' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") right 14px center/13px no-repeat}
 .demobar{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--volt);color:#111;font:500 13px/1.3 var(--body)}
 .demobar .ghost{background:#111;color:#fff;border:0;padding:10px 18px}
+.mv{position:relative;display:inline-block;overflow:hidden;cursor:pointer}
+.mv input{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px}
 .linkbtn{border:0;background:none;padding:0;color:inherit;font-weight:700;text-decoration:underline;text-underline-offset:3px}
 
 /* pagina di fine allenamento */
@@ -460,6 +462,18 @@ function readClose(){
     cardio: $('cCardio').checked && m > 0 ? {t: $('cCardioT').value, m} : null,
     abs: $('cAbs').checked && n > 0 ? {n, u: $('cAbsU').value} : null};
 }
+// sposta un allenamento a un altro giorno (con i kg segnati quel giorno per i suoi esercizi)
+function moveSession(id, nd){
+  const x = state.sessions.find(q => q.id === id); if (!x || !nd || nd === x.date || nd > iso(today())) return false;
+  const od = x.date, keys = new Set((BY[x.day][x.variant] || []).map(exKey)), moved = [];
+  (state.kg || []).filter(k => k.date === od && keys.has(k.key)).forEach(k => {
+    state.kg = state.kg.filter(q => q.id !== k.id);
+    if (col && !demo) col.doc(k.id).delete().catch(() => {});
+    const nid = 'kg_' + nd + '_' + hkey(k.key);
+    if (!state.kg.some(q => q.id === nid)) { const n = Object.assign({}, k, {id: nid, date: nd, pending: true}); state.kg.push(n); moved.push(n); }
+  });
+  updateSession(id, {date: nd}); moved.forEach(pushKg); save(); return true;
+}
 function removeSession(id){
   state.sessions = state.sessions.filter(s => s.id !== id);
   if (col && !demo) { state.deleted.push(id); col.doc(id).delete().catch(() => {}); }
@@ -679,7 +693,7 @@ function openDay(date){
   const ss = sorted().filter(s => s.date === date);
   const d = parse(date);
   $('sheetD').innerHTML = '<div class="grab"></div><h3>' + GG[(d.getDay()+6)%7] + ' ' + d.getDate() + ' ' + MESI[d.getMonth()] + '</h3>' +
-    (ss.length ? '<ul class="hist">' + ss.map(s => '<li><span class="d"></span><span><b class="t-' + s.day + '">' + esc(BY[s.day].nome) + '</b> · ' + s.variant + '<br>' + starsHtml(s) + ' <button type="button" class="linkbtn" data-recap="' + s.id + '">riepilogo</button></span><button type="button" class="del" data-id="' + s.id + '" data-in="day">Elimina</button></li>').join('') + '</ul>' : '<p class="extra">Nessun allenamento segnato in questo giorno.</p>') +
+    (ss.length ? '<ul class="hist">' + ss.map(s => '<li><span class="d"></span><span><b class="t-' + s.day + '">' + esc(BY[s.day].nome) + '</b> · ' + s.variant + '<br>' + starsHtml(s) + ' <button type="button" class="linkbtn" data-recap="' + s.id + '">riepilogo</button> <label class="mv linkbtn">sposta<input type="date" data-moveto="' + s.id + '" max="' + iso(today()) + '" value="' + s.date + '" aria-label="Sposta a un altro giorno"></label></span><button type="button" class="del" data-id="' + s.id + '" data-in="day">Elimina</button></li>').join('') + '</ul>' : '<p class="extra">Nessun allenamento segnato in questo giorno.</p>') +
     '<div class="eyebrow">Aggiungi</div><div class="addrow"><select id="addDay" aria-label="Allenamento">' + DAYS.map(x => '<option value="' + x.id + '">' + esc(x.nome) + '</option>').join('') + '</select>' +
     '<select id="addVar" aria-label="Variante"><option>A</option><option>B</option></select></div>' +
     '<button type="button" class="primary" id="addGo" data-date="' + date + '">Aggiungi allenamento</button>' +
@@ -731,6 +745,7 @@ $('dlgC').addEventListener('click', e => {
   }
 });
 $('dlgC').addEventListener('change', e => { if (e.target.id === 'cCardio') $('cCardioBd').hidden = !e.target.checked; if (e.target.id === 'cAbs') $('cAbsBd').hidden = !e.target.checked; });
+document.addEventListener('change', e => { const m = e.target.closest('input[data-moveto]'); if (m && moveSession(m.dataset.moveto, m.value)) { if ($('dlgD').open) $('dlgD').close(); toast('Spostato al ' + fmt(m.value)); } });
 document.addEventListener('click', e => { const r = e.target.closest('[data-recap]'); if (r) { if ($('dlgD').open) $('dlgD').close(); openClose(r.dataset.recap); } });
 $('hist').addEventListener('click', e => { const b = e.target.closest('.del'); if (!b) return; if (armed === b.dataset.id) { armed = null; removeSession(b.dataset.id); toast('Eliminato'); } else { armed = b.dataset.id; renderHist(); } });
 document.addEventListener('click', e => {
