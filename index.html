@@ -60,6 +60,9 @@ h2{font-size:34px;margin-top:2px}
 details .sync{margin:14px 0 0}
 .sync b{font-weight:700;color:var(--ink)}
 .wkline{display:flex;align-items:flex-end;justify-content:space-between;gap:8px 12px;flex-wrap:wrap}
+.ycount{background:var(--surface);border-radius:20px;padding:14px 16px 12px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;font:500 14px/1.25 var(--body)}
+.ycount b{font:800 40px/.85 var(--display);font-variant-numeric:tabular-nums}
+.ycount small{flex-basis:100%;font:500 11.5px/1.3 var(--body);color:var(--muted)}
 .yleft{margin-left:auto;text-align:right;font:500 11px/1.2 var(--body);color:var(--muted);max-width:118px}
 .yleft b{display:block;font:800 32px/.9 var(--display);color:var(--ink);margin-bottom:2px}
 
@@ -269,6 +272,7 @@ dialog.full{margin:0;width:100%;max-width:none;height:100%;max-height:none;borde
   <header class="head">
     <div class="eyebrow" id="wkrange"></div>
     <div class="wkline"><h1 id="wk">Settimana</h1><span class="yleft" id="yleft"></span></div>
+    <div class="ycount" id="ycount"></div>
   </header>
 
   <section class="wsec" aria-label="Questa settimana">
@@ -545,6 +549,8 @@ function suggest(){
 
 // obiettivo della settimana: oltre questo numero i riquadri diventano arancioni
 const OBIETTIVO = 4;
+// prima di usare l'app: stima di giulio, 3 allenamenti a settimana da gennaio (3,5 se vuole essere più generoso)
+const PRE_SETT = 3;
 function renderWeek(){
   const t = today(), mon = monday(t), tIso = iso(t);
   const sun = addDays(mon, 6);
@@ -566,6 +572,9 @@ function renderWeek(){
   // giorni alla fine dell'anno
   const fine = new Date(t.getFullYear(), 11, 31), gl = Math.round((fine - t) / 864e5);
   $('yleft').innerHTML = gl ? '<b>' + gl + '</b> ' + (gl === 1 ? 'giorno' : 'giorni') + ' alla fine del ' + t.getFullYear() : 'ultimo giorno del ' + t.getFullYear();
+  const y0 = t.getFullYear() + '-01-01', mine = sorted().map(q => q.date), first = mine[0] && mine[0] > y0 ? mine[0] : (mine[0] ? y0 : tIso);
+  const pre = demo || first <= y0 ? 0 : Math.round(diffDays(y0, first) / 7 * PRE_SETT), reg = state.sessions.filter(q => q.date >= y0).length;
+  $('ycount').innerHTML = 'Quest\'anno ti sei allenato <b>' + (pre + reg) + '</b> volte' + (pre ? '<small>' + pre + ' stimate da gennaio al ' + fmt(first) + ' (circa ' + String(PRE_SETT).replace('.', ',') + ' a settimana) + ' + reg + ' segnate nell\'app</small>' : '');
   $('boxes').innerHTML = bx + '<span class="bl"><b>' + n + ' su ' + OBIETTIVO + '</b> questa settimana</span>';
   $('boxes').setAttribute('aria-label', n + ' allenamenti su ' + OBIETTIVO + ' questa settimana');
 }
