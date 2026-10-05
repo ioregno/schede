@@ -4,7 +4,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="Scheda GT">
 <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png">
-<style>:root{padding-top:env(safe-area-inset-top,0px)}</style>
 </head><body>
 <title>Scheda Green Theory</title>
 <style>
@@ -49,22 +48,28 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 .eyebrow{font:500 12px/1.25 var(--body);color:var(--muted)}
 h1,h2,h3,.num{font-family:var(--display);font-weight:800;text-transform:uppercase;letter-spacing:0;margin:0;line-height:.92}
-h1{font-size:40px}
+h1{font-size:30px}
+.apphead{position:sticky;top:0;z-index:7;display:flex;align-items:center;justify-content:center;min-height:52px;padding:calc(6px + env(safe-area-inset-top,0px)) 16px 4px;background:color-mix(in srgb,var(--bg) 93%,transparent);-webkit-backdrop-filter:saturate(1.8) blur(20px);backdrop-filter:saturate(1.8) blur(20px);box-shadow:0 1px 0 var(--line)}
+.apphead h1{font-size:30px;line-height:1}
+.wnav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px}
+.wmid{flex:1;min-width:0;text-align:center}
+.wmid h2{font-size:30px;margin:0 0 4px}
+.wmid .eyebrow{font-size:12px}
+.wmid #yleft b{font-weight:700;color:var(--ink)}
+.wbtn{flex:none;width:44px;height:44px;border-radius:50%;border:0;background:var(--surface);font:500 28px/1 var(--body);color:var(--ink);padding:0 0 3px}
+.wbtn:disabled{opacity:.3}
+.week{touch-action:pan-y}
 h2{font-size:34px;margin-top:2px}
 .num{font-variant-numeric:tabular-nums}
 .c-g1{--dc:var(--g1)}.c-g2{--dc:var(--g2)}.c-g3{--dc:var(--g3)}.c-g4{--dc:var(--g4)}
 .t-g1{color:var(--g1t)}.t-g2{color:var(--g2t)}.t-g3{color:var(--g3t)}.t-g4{color:var(--g4t)}
 
 /* intestazione */
-.head{display:flex;flex-direction:column;gap:8px}
 details .sync{margin:14px 0 0}
 .sync b{font-weight:700;color:var(--ink)}
-.wkline{display:flex;align-items:flex-end;justify-content:space-between;gap:8px 12px;flex-wrap:wrap}
 .ycount{background:var(--surface);border-radius:20px;padding:14px 16px 12px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;font:500 14px/1.25 var(--body)}
 .ycount b{font:800 40px/.85 var(--display);font-variant-numeric:tabular-nums}
 .ycount small{flex-basis:100%;font:500 11.5px/1.3 var(--body);color:var(--muted)}
-.yleft{margin-left:auto;text-align:right;font:500 11px/1.2 var(--body);color:var(--muted);max-width:118px}
-.yleft b{display:block;font:800 32px/.9 var(--display);color:var(--ink);margin-bottom:2px}
 
 /* settimana */
 .wsec{display:flex;flex-direction:column;gap:12px}
@@ -231,7 +236,7 @@ dialog::backdrop{background:rgba(0,0,0,.42);-webkit-backdrop-filter:blur(3px);ba
 .close{align-self:stretch;min-height:52px}
 .addrow{display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:8px}
 .addrow select,.opt select{width:100%;border:0;border-radius:999px;padding:14px 38px 14px 16px;font:600 15px/1.1 var(--body);-webkit-appearance:none;appearance:none;background:var(--tile) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2.5 5l4.5 4.5L11.5 5' fill='none' stroke='%23707072' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") right 14px center/13px no-repeat}
-.demobar{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--volt);color:#111;font:500 13px/1.3 var(--body)}
+.demobar{position:relative;z-index:6;display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--volt);color:#111;font:500 13px/1.3 var(--body)}
 .demobar .ghost{background:#111;color:#fff;border:0;padding:10px 18px}
 .hist .mvrow{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;gap:10px;font:500 13px/1.2 var(--body);color:var(--muted)}
 .mvrow input{border:0;border-radius:999px;background:var(--tile);color:var(--ink);padding:10px 14px;font:600 16px/1.1 var(--body);min-width:0}
@@ -273,20 +278,22 @@ dialog.full{margin:0;width:100%;max-width:none;height:100%;max-height:none;borde
 </style>
 
 <div class="demobar" id="demoBar" hidden><span><b>Esempio</b>: un anno di allenamenti finti, non viene salvato nulla.</span><button type="button" class="ghost" id="demoExit">Esci</button></div>
+<header class="apphead"><h1>Scheda</h1></header>
 <div class="wrap" id="app">
-  <header class="head">
-    <div class="eyebrow" id="wkrange"></div>
-    <div class="wkline"><h1 id="wk">Settimana</h1><span class="yleft" id="yleft"></span></div>
-    <div class="ycount" id="ycount"></div>
-  </header>
+  <div class="ycount" id="ycount"></div>
 
-  <section class="wsec" aria-label="Questa settimana">
+  <section class="wsec" aria-label="Settimana">
     <div class="boxes" id="boxes"></div>
+    <div class="wnav">
+      <button type="button" class="wbtn" id="wPrev" aria-label="Settimana precedente">‹</button>
+      <div class="wmid"><h2 id="wk">Settimana</h2><div class="eyebrow"><span id="wkrange"></span> · <span id="yleft"></span></div></div>
+      <button type="button" class="wbtn" id="wNext" aria-label="Settimana successiva">›</button>
+    </div>
     <div class="week" id="week"></div>
   </section>
 
   <section class="pick" id="pick" aria-label="Allenamento di oggi">
-    <div class="sugg" id="sugg"></div>
+    <div class="sugg" id="sugg">Cosa vuoi allenare oggi?</div>
     <div class="selwrap"><span class="selname" id="selName" aria-hidden="true"></span><select id="selDay" aria-label="Allenamento"></select></div>
     <div class="seg" id="seg" role="group" aria-label="Variante">
       <button type="button" id="vA" data-v="A"><span class="num">Variante A</span><small id="vAlast"></small></button>
@@ -346,6 +353,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 const MESI = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
 const GG = ['lun','mar','mer','gio','ven','sab','dom'];
 
+let wOff = 0;   // settimana mostrata: 0 = questa, -1 = la scorsa, solo indietro
 let state = {sessions: [], deleted: [], kg: []};
 let ui = {day: null, variant: null, range: 30, checks: {}};
 try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && Array.isArray(s.sessions)) state = {sessions: s.sessions, deleted: s.deleted || [], kg: Array.isArray(s.kg) ? s.kg : []}; } catch (e) {}
@@ -558,9 +566,10 @@ const OBIETTIVO = 4;
 // prima di usare l'app: stima di giulio, 3 allenamenti a settimana da gennaio (3,5 se vuole essere più generoso)
 const PRE_SETT = 3;
 function renderWeek(){
-  const t = today(), mon = monday(t), tIso = iso(t);
+  const t = today(), tIso = iso(t), ref = addDays(t, 7 * wOff), mon = monday(ref);
   const sun = addDays(mon, 6);
-  $('wk').textContent = 'Settimana ' + isoWeek(t);
+  $('wk').textContent = 'Settimana ' + isoWeek(ref);
+  $('wNext').disabled = wOff >= 0; $('wPrev').disabled = wOff <= -104;
   $('wkrange').textContent = mon.getDate() + ' ' + MESI[mon.getMonth()] + ' – ' + sun.getDate() + ' ' + MESI[sun.getMonth()] + ' ' + sun.getFullYear();
   let h = '';
   const wkS = [];
@@ -581,7 +590,7 @@ function renderWeek(){
   const y0 = t.getFullYear() + '-01-01', mine = sorted().map(q => q.date), first = mine[0] && mine[0] > y0 ? mine[0] : (mine[0] ? y0 : tIso);
   const pre = demo || first <= y0 ? 0 : Math.round(diffDays(y0, first) / 7 * PRE_SETT), reg = state.sessions.filter(q => q.date >= y0).length;
   $('ycount').innerHTML = 'Quest\'anno ti sei allenato <b>' + (pre + reg) + '</b> volte' + (pre ? '<small>' + pre + ' stimate da gennaio al ' + fmt(first) + ' (circa ' + String(PRE_SETT).replace('.', ',') + ' a settimana) + ' + reg + ' segnate nell\'app</small>' : '');
-  $('boxes').innerHTML = bx + '<span class="bl"><b>' + n + ' su ' + OBIETTIVO + '</b> questa settimana</span>';
+  $('boxes').innerHTML = bx + '<span class="bl"><b>' + n + ' su ' + OBIETTIVO + '</b> ' + (wOff ? 'in quella settimana' : 'questa settimana') + '</span>';
   $('boxes').setAttribute('aria-label', n + ' allenamenti su ' + OBIETTIVO + ' questa settimana');
 }
 
@@ -590,8 +599,7 @@ function renderPick(){
   if (!ui.day || !BY[ui.day] || ui.pickDate !== iso(today())) { ui.day = sg.day; ui.variant = sg.variant; }
   if (ui.variant !== 'A' && ui.variant !== 'B') ui.variant = 'A';
   const same = ui.day === sg.day && ui.variant === sg.variant;
-  $('sugg').innerHTML = same ? 'Consigliato oggi' : 'Consigliato oggi: <b>' + esc(BY[sg.day].nome) + ' · ' + sg.variant + '</b>';
-  $('why').textContent = sg.why;
+  $('why').textContent = (same ? '' : 'Consigliato oggi: ' + BY[sg.day].nome + ' · ' + sg.variant + '. ') + sg.why;
   $('selName').textContent = BY[ui.day].nome;
   $('app').style.setProperty('--dc', 'var(--' + ui.day + ')'); $('pick').dataset.v = ui.variant;
   $('selDay').innerHTML = DAYS.map(d => '<option value="' + d.id + '"' + (d.id === ui.day ? ' selected' : '') + '>' + esc(d.nome) + (d.id === sg.day ? '  ★' : '') + '</option>').join('');
@@ -736,6 +744,12 @@ $('exs').addEventListener('click', e => {
   const k = iso(today()) + ui.day + ui.variant, i = +t.dataset.i;
   const a = ui.checks[k] || []; ui.checks = {[k]: a.includes(i) ? a.filter(x => x !== i) : a.concat(i)}; saveUi(); renderEx();
 });
+const goWeek = d => { const n = Math.min(0, Math.max(-104, wOff + d)); if (n === wOff) return; wOff = n; renderWeek(); };
+$('wPrev').addEventListener('click', () => goWeek(-1));
+$('wNext').addEventListener('click', () => goWeek(1));
+let tx = null;
+$('week').addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, {passive: true});
+$('week').addEventListener('touchend', e => { if (tx === null) return; const dx = e.changedTouches[0].clientX - tx; tx = null; if (Math.abs(dx) > 55) { goWeek(dx > 0 ? -1 : 1); } }, {passive: true});
 $('week').addEventListener('click', e => { const b = e.target.closest('.day'); if (b) openDay(b.dataset.date); });
 $('logBtn').addEventListener('click', () => { ui.pickDate = iso(today()); saveUi(); openClose(); });
 $('dlgC').addEventListener('click', e => {
@@ -789,7 +803,7 @@ $('bkImp').addEventListener('click', () => {
 });
 // a mezzanotte la settimana e il consiglio si aggiornano
 let lastDay = iso(today());
-setInterval(() => { if (iso(today()) !== lastDay) { lastDay = iso(today()); ui.day = null; render(); } }, 60000);
+setInterval(() => { if (iso(today()) !== lastDay) { lastDay = iso(today()); ui.day = null; wOff = 0; render(); } }, 60000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden && iso(today()) !== lastDay) { lastDay = iso(today()); ui.day = null; render(); } });
 
 document.addEventListener('click', e => {
