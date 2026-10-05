@@ -386,7 +386,8 @@ function setKg(key, val, rip){
   save();
 }
 function kgHistory(key){ return (state.kg || []).filter(k => k.key === key).sort((a, b) => a.date < b.date ? 1 : -1); }
-function starsHtml(s, label){
+function starsHtml(s, label, ro){
+  if (ro) return '<span class="stars ro" role="img" aria-label="' + (s.q || 0) + ' stelle su 3">' + [1,2,3].map(k => '<span class="st' + ((s.q || 0) >= k ? ' on' : '') + '">★</span>').join('') + '</span>';
   let h = '<span class="stars" role="group" aria-label="' + (label || 'Qualità') + '">';
   for (let k = 1; k <= 3; k++) h += '<button type="button" class="st' + ((s.q || 0) >= k ? ' on' : '') + '" data-star="' + s.id + '" data-q="' + k + '" aria-label="' + k + (k === 1 ? ' stella' : ' stelle') + '" aria-pressed="' + ((s.q || 0) >= k) + '">★</button>';
   return h + '</span>';
@@ -679,7 +680,7 @@ function renderStats(){
 let armed = null;
 function renderHist(){
   const all = sorted().reverse().slice(0, 12);
-  $('hist').innerHTML = all.length ? all.map(s => '<li data-open="' + s.date + '" tabindex="0" role="button" aria-label="Apri il giorno ' + fmt(s.date) + '"><span class="d">' + fmt(s.date) + '</span><span><b class="t-' + s.day + '">' + esc(BY[s.day] ? BY[s.day].nome : s.day) + '</b> · ' + s.variant + '<br>' + starsHtml(s) + '</span><button type="button" class="del' + (armed === s.id ? ' armed' : '') + '" data-id="' + s.id + '">' + (armed === s.id ? 'Conferma' : 'Elimina') + '</button></li>').join('')
+  $('hist').innerHTML = all.length ? all.map(s => '<li data-open="' + s.date + '" tabindex="0" role="button" aria-label="Apri il giorno ' + fmt(s.date) + '"><span class="d">' + fmt(s.date) + '</span><span><b class="t-' + s.day + '">' + esc(BY[s.day] ? BY[s.day].nome : s.day) + '</b> · ' + s.variant + '<br>' + starsHtml(s, '', true) + '</span><button type="button" class="del' + (armed === s.id ? ' armed' : '') + '" data-id="' + s.id + '">' + (armed === s.id ? 'Conferma' : 'Elimina') + '</button></li>').join('')
     : '<li><span class="d">—</span><span style="color:var(--muted)">Gli allenamenti segnati compaiono qui.</span><span></span></li>';
 }
 
@@ -758,7 +759,7 @@ $('dlgC').addEventListener('click', e => {
 $('dlgC').addEventListener('change', e => { if (e.target.id === 'cCardio') $('cCardioBd').hidden = !e.target.checked; if (e.target.id === 'cAbs') $('cAbsBd').hidden = !e.target.checked; });
 document.addEventListener('change', e => { const m = e.target.closest('input[data-moveto]'); if (m && moveSession(m.dataset.moveto, m.value)) { if ($('dlgD').open) $('dlgD').close(); toast('Spostato al ' + fmt(m.value)); } });
 document.addEventListener('click', e => { const r = e.target.closest('[data-recap]'); if (r) { if ($('dlgD').open) $('dlgD').close(); openClose(r.dataset.recap); } });
-$('hist').addEventListener('click', e => { if (e.target.closest('.st')) return; const li = e.target.closest('li[data-open]'); if (li && !e.target.closest('.del')) { openDay(li.dataset.open); return; } const b = e.target.closest('.del'); if (!b) return; if (armed === b.dataset.id) { armed = null; removeSession(b.dataset.id); toast('Eliminato'); } else { armed = b.dataset.id; renderHist(); } });
+$('hist').addEventListener('click', e => { const li = e.target.closest('li[data-open]'); if (li && !e.target.closest('.del')) { openDay(li.dataset.open); return; } const b = e.target.closest('.del'); if (!b) return; if (armed === b.dataset.id) { armed = null; removeSession(b.dataset.id); toast('Eliminato'); } else { armed = b.dataset.id; renderHist(); } });
 document.addEventListener('click', e => {
   const c = e.target.closest('[data-close]'); if (c) { $(c.dataset.close).close(); return; }
   if (e.target.id === 'addGo') { addSession(e.target.dataset.date, $('addDay').value, $('addVar').value); $('dlgD').close(); toast('Aggiunto il ' + fmt(e.target.dataset.date)); return; }
