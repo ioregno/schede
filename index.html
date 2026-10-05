@@ -180,12 +180,17 @@ details .sync{margin:14px 0 0}
 .top{font:400 15px/1.5 var(--body)}
 .top b{font-weight:700}
 .bars{display:flex;flex-direction:column;gap:11px;background:var(--surface);border-radius:var(--r);padding:18px 16px}
-.brow{display:grid;grid-template-columns:88px minmax(0,1fr) 62px;gap:10px;align-items:center;font:500 13px/1.2 var(--body)}
+.top2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.top2 > div{background:var(--surface);border-radius:22px;padding:14px 14px 13px;display:flex;flex-direction:column;gap:6px}
+.top2 small{font:500 12px/1.2 var(--body);color:var(--muted)}
+.top2 b{font:800 25px/.95 var(--display);text-transform:uppercase}
+.top2 span{font:500 13px/1.25 var(--body);color:var(--muted)}
+.brow{display:grid;grid-template-columns:104px minmax(0,1fr) 84px;gap:10px;align-items:center;font:500 13px/1.2 var(--body)}
 .brow:first-child{font-weight:700}
 .track{height:10px;border-radius:999px;background:var(--line);overflow:hidden}
-.fill{height:100%;border-radius:999px;background:var(--bar);min-width:0}
+.fill{height:100%;border-radius:999px;background:var(--dc,var(--bar));min-width:0}
 .brow.zero{color:var(--muted)}
-.brow .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.brow .v{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
 .empty{font:500 14px/1.5 var(--body);color:var(--muted);background:var(--surface);border-radius:var(--r);padding:18px}
 
 /* storico */
@@ -658,22 +663,14 @@ function cardioLine(ss){
 function renderStats(){
   document.querySelectorAll('#rng button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.r === ui.range));
   const st = stats(ui.range);
-  if (!st.ss.length) { $('statbody').innerHTML = '<div class="empty">Ancora nessun allenamento in questo periodo. Quando premi <b>Termina</b>, qui vedi quante serie hai fatto per ogni muscolo e quale hai allenato di più. <button type="button" class="linkbtn" id="demoGo">Guarda un esempio</button></div>'; return; }
-  const rows = D.gruppi.map(g => ({g, v: st.sets[g], n: st.sess[g].size})).sort((a,b) => b.v - a.v);
-  const max = rows[0].v || 1;
-  const nA = st.ss.filter(s => s.variant === 'A').length, nB = st.ss.length - nA;
-  const first = sorted()[0].date, span = Math.min(ui.range, diffDays(first, iso(today())) + 1);
-  const perWeek = (st.ss.length / Math.max(span / 7, 1)).toFixed(1).replace('.', ',');
-  const low = rows.filter(r => r.v > 0).pop();
-  let h = '<div class="kpis"><div class="kpi"><span class="num">' + st.ss.length + '</span><small>allenamenti</small></div>' +
-          '<div class="kpi"><span class="num">' + perWeek + '</span><small>a settimana</small></div>' +
-          '<div class="kpi"><span class="num">' + nA + '/' + nB + '</span><small>varianti A/B</small></div>' +
-          '<div class="kpi"><span class="num">' + (avgQ(st.ss) ? fq(avgQ(st.ss)) + '<span class="sx">★</span>' : '–') + '</span><small>qualità media</small></div></div>';
-  const qd = DAYS.map(d => ({d, a: avgQ(st.ss.filter(s => s.day === d.id))})).filter(x => x.a !== null).sort((a, b) => b.a - a.a);
-  h += '<div class="top">Hai allenato di più <b>' + esc(rows[0].g) + '</b> (' + rows[0].v + ' serie)' + (low && low.g !== rows[0].g ? ', di meno <b>' + esc(low.g) + '</b> (' + low.v + ')' : '') + '.' +
-    cardioLine(st.ss) +
-    (qd.length > 1 && qd[0].a !== qd[qd.length-1].a ? ' Vanno meglio i giorni <b class="t-' + qd[0].d.id + '">' + esc(qd[0].d.breve) + '</b> (' + fq(qd[0].a) + '★), peggio <b class="t-' + qd[qd.length-1].d.id + '">' + esc(qd[qd.length-1].d.breve) + '</b> (' + fq(qd[qd.length-1].a) + '★).' : '') + '</div>';
-  h += '<div class="bars">' + rows.map(r => '<div class="brow' + (r.v ? '' : ' zero') + '"><span>' + esc(r.g) + '</span><div class="track"><div class="fill" style="width:' + (r.v / max * 100).toFixed(1) + '%"></div></div><span class="v">' + r.v + ' serie</span></div>').join('') + '</div>';
+  if (!st.ss.length) { $('statbody').innerHTML = '<div class="empty">Ancora nessun allenamento in questo periodo. Quando premi <b>Termina</b>, qui vedi quale gruppo alleni di più e quale alleni meglio. <button type="button" class="linkbtn" id="demoGo">Guarda un esempio</button></div>'; return; }
+  const rows = DAYS.map(d => ({d, n: st.ss.filter(x => x.day === d.id).length, q: avgQ(st.ss.filter(x => x.day === d.id))})).sort((a, b) => b.n - a.n);
+  const max = rows[0].n || 1, best = rows.filter(r => r.q !== null).sort((a, b) => b.q - a.q || b.n - a.n)[0];
+  const nm = d => '<b class="t-' + d.id + '">' + esc(d.nome) + '</b>';
+  let h = '<div class="top2"><div><small>Alleni di più</small>' + nm(rows[0].d) + '<span>' + rows[0].n + (rows[0].n === 1 ? ' sessione' : ' sessioni') + '</span></div>' +
+    '<div><small>Alleni meglio</small>' + (best ? nm(best.d) + '<span>' + fq(best.q) + ' ★ di media</span>' : '<span>Dai le stelle a fine allenamento</span>') + '</div></div>';
+  h += '<div class="bars">' + rows.map(r => '<div class="brow' + (r.n ? '' : ' zero') + '"><span>' + esc(r.d.nome) + '</span><div class="track"><div class="fill c-' + r.d.id + '" style="width:' + (r.n / max * 100).toFixed(1) + '%"></div></div><span class="v">' + r.n + (r.n === 1 ? ' sessione' : ' sessioni') + '</span></div>').join('') + '</div>';
+  const cl = cardioLine(st.ss); if (cl) h += '<p class="extra">' + cl.trim() + '</p>';
   $('statbody').innerHTML = h;
 }
 
