@@ -2,7 +2,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="Scheda GT">
-<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#111111" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#D8FF00" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png">
 </head><body>
 <title>Scheda Green Theory</title>
@@ -15,6 +15,7 @@
   --ink:#111111; --muted:#707072; --line:#E5E5E5; --line2:#CACACB;
   --btn:#111111; --btn-ink:#FFFFFF; --focus:#111111; --bar:#111111;
   --volt:#D8FF00; --on-volt:#111111; --hot:#FF5000;
+  --hero:#111111; --hero-ink:#FFFFFF; --hero-acc:#D8FF00;
   --g1:#E0301E; --g2:#00806C; --g3:#2346F5; --g4:#7B3FE4;
   --g1t:#CC2816; --g2t:#007362; --g3t:#2346F5; --g4t:#6C33D4;
   --star:#111111; --star-off:#CACACB;
@@ -28,6 +29,7 @@
   --ink:#FFFFFF; --muted:#9E9EA0; --line:#262628; --line2:#3A3A3C;
   --btn:#D8FF00; --btn-ink:#111111; --focus:#D8FF00; --bar:#D8FF00;
   --g1t:#FF6B5B; --g2t:#33D6BC; --g3t:#8A9DFF; --g4t:#B490FF;
+  --hero:#D8FF00; --hero-ink:#111111; --hero-acc:#111111;
   --star:#D8FF00; --star-off:#3A3A3C; color-scheme:dark;
   --glow:30%; --glass:rgba(44,44,46,.62); --glass-line:rgba(255,255,255,.13); --glass-shadow:0 12px 36px rgba(0,0,0,.55)}}
 :root[data-theme="dark"]{
@@ -35,13 +37,14 @@
   --ink:#FFFFFF; --muted:#9E9EA0; --line:#262628; --line2:#3A3A3C;
   --btn:#D8FF00; --btn-ink:#111111; --focus:#D8FF00; --bar:#D8FF00;
   --g1t:#FF6B5B; --g2t:#33D6BC; --g3t:#8A9DFF; --g4t:#B490FF;
+  --hero:#D8FF00; --hero-ink:#111111; --hero-acc:#111111;
   --star:#D8FF00; --star-off:#3A3A3C; color-scheme:dark;
   --glow:30%; --glass:rgba(44,44,46,.62); --glass-line:rgba(255,255,255,.13); --glass-shadow:0 12px 36px rgba(0,0,0,.55)}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
 body{background:var(--bg);color:var(--ink);font:400 15px/1.45 var(--body);margin:0;-webkit-font-smoothing:antialiased}
-.wrap{--dc:var(--g1);max-width:480px;margin:0 auto;padding-inline:16px;padding-block:18px 132px;display:flex;flex-direction:column;gap:30px;position:relative;isolation:isolate;overflow-x:clip}
+.wrap{--dc:var(--g1);max-width:480px;margin:0 auto;padding-inline:16px;padding-block:26px 132px;display:flex;flex-direction:column;gap:30px;position:relative;isolation:isolate;overflow-x:clip}
 .wrap::before{content:"";position:absolute;left:0;right:0;top:-140px;height:520px;z-index:-1;pointer-events:none;background:radial-gradient(70% 55% at 30% 36%,color-mix(in srgb,var(--dc) var(--glow),transparent),transparent 74%)}
 button,select,textarea,input{font:inherit;color:inherit}
 button{cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -49,8 +52,16 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .eyebrow{font:500 12px/1.25 var(--body);color:var(--muted)}
 h1,h2,h3,.num{font-family:var(--display);font-weight:800;text-transform:uppercase;letter-spacing:0;margin:0;line-height:.92}
 h1{font-size:30px}
-.apphead{position:sticky;top:0;z-index:7;display:flex;align-items:center;justify-content:center;min-height:52px;padding:calc(6px + env(safe-area-inset-top,0px)) 16px 4px;background:color-mix(in srgb,var(--bg) 93%,transparent);-webkit-backdrop-filter:saturate(1.8) blur(20px);backdrop-filter:saturate(1.8) blur(20px);box-shadow:0 1px 0 var(--line)}
-.apphead h1{font-size:30px;line-height:1}
+.apphead{position:sticky;top:0;z-index:7;display:flex;align-items:center;justify-content:space-between;min-height:52px;padding:calc(6px + env(safe-area-inset-top,0px)) 16px 6px 20px;background:var(--hero);color:var(--hero-ink)}
+.apphead h1{font-size:28px;line-height:1;letter-spacing:.01em}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--hero-acc);color:var(--hero);display:grid;place-items:center;font:800 19px/1 var(--display);padding-top:1px}
+.hero{position:relative;overflow:hidden;background:var(--hero);color:var(--hero-ink);padding:6px 20px 34px;border-radius:0 0 36px 36px;isolation:isolate}
+.hello{font:800 64px/.84 var(--display);text-transform:uppercase;letter-spacing:0}
+.hello span{display:block;color:var(--hero-acc)}
+.hero p{margin:14px 0 0;font:500 14px/1.35 var(--body);opacity:.82;max-width:250px}
+.hero p b{font-weight:700}
+.hero::after{content:"";position:absolute;right:-26px;bottom:34px;width:170px;height:22px;border-radius:999px;background:var(--hero-acc);transform:rotate(-24deg);z-index:-1}
+.hero::before{content:"";position:absolute;right:20px;bottom:6px;width:90px;height:22px;border-radius:999px;background:var(--hero-acc);opacity:.55;transform:rotate(-24deg);z-index:-1}
 .wnav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px}
 .wmid{flex:1;min-width:0;text-align:center}
 .wmid h2{font-size:30px;margin:0 0 4px}
@@ -278,7 +289,8 @@ dialog.full{margin:0;width:100%;max-width:none;height:100%;max-height:none;borde
 </style>
 
 <div class="demobar" id="demoBar" hidden><span><b>Esempio</b>: un anno di allenamenti finti, non viene salvato nulla.</span><button type="button" class="ghost" id="demoExit">Esci</button></div>
-<header class="apphead"><h1>Scheda</h1></header>
+<header class="apphead"><h1>Scheda</h1><span class="avatar" aria-hidden="true">G</span></header>
+<section class="hero" aria-label="Saluto"><div class="hello" id="hello">Ciao<span>Giulio</span></div><p id="heroSub"></p></section>
 <div class="wrap" id="app">
   <div class="ycount" id="ycount"></div>
 
@@ -689,7 +701,14 @@ function renderHist(){
     : '<li><span class="d">—</span><span style="color:var(--muted)">Gli allenamenti segnati compaiono qui.</span><span></span></li>';
 }
 
-function render(){ renderWeek(); renderPick(); renderEx(); renderStats(); renderHist(); }
+const MESI_L = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+const GGL2 = ['lunedì','martedì','mercoledì','giovedì','venerdì','sabato','domenica'];
+function renderHero(){
+  const t = today(), tIso = iso(t), sg = suggest(), dn = state.sessions.filter(q => q.date === tIso).pop();
+  const dt = GGL2[(t.getDay() + 6) % 7] + ' ' + t.getDate() + ' ' + MESI_L[t.getMonth()];
+  $('heroSub').innerHTML = dt.charAt(0).toUpperCase() + dt.slice(1) + '<br>' + (dn && BY[dn.day] ? 'Oggi hai chiuso <b>' + esc(BY[dn.day].nome) + '</b> ✓' : 'Oggi tocca a <b>' + esc(BY[sg.day].nome) + '</b>');
+}
+function render(){ renderHero(); renderWeek(); renderPick(); renderEx(); renderStats(); renderHist(); }
 
 // foglio macchina
 function openMachine(slug, label){
