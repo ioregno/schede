@@ -840,7 +840,7 @@ function drawJoke(){
   $('sheetJ').innerHTML = '<div class="grab"></div><div class="eyebrow">Pausa barzelletta' + (j.cat ? ' · ' + esc(j.cat) : '') + '</div><div class="joke"><span>' + esc(j.testo) + '</span></div>' +
     '<div class="jrate"><span>Quanto fa ridere?</span><span class="stars">' + [1,2,3].map(k => '<button type="button" class="st' + (q >= k ? ' on' : '') + '" data-jq="' + k + '" aria-label="' + k + (k === 1 ? ' stella' : ' stelle') + '" aria-pressed="' + (q >= k) + '">★</button>').join('') + '</span></div>' +
     '<p class="jmeta">Votate ' + n + ' su ' + JOKES.length + '</p>' +
-    '<button type="button" class="primary" data-jnext>' + (JOKES.length > 1 ? 'Un\'altra barzelletta' : 'Ok') + '</button><button type="button" class="ghost close" data-close="dlgJ">Chiudi</button>';
+    '<button type="button" class="primary" data-jnext>' + (JOKES.length > 1 ? 'Un\'altra barzelletta' : 'Ok') + '</button><button type="button" class="ghost close" data-jcopy' + (n ? '' : ' disabled') + '>' + (n ? 'Copia i miei voti' : 'Copia i miei voti (dai prima qualche stella)') + '</button><button type="button" class="ghost close" data-close="dlgJ">Chiudi</button>';
 }
 function openJoke(){ if (!JOKES.length) return; if (!JOKES.some(x => x.id === jk.cur)) pickJoke(); drawJoke(); if (!$('dlgJ').open) $('dlgJ').showModal(); }
 $('jtab').hidden = !JOKES.length;
@@ -849,6 +849,18 @@ $('dlgJ').addEventListener('click', e => {
   if (e.target === $('dlgJ')) { $('dlgJ').close(); return; }
   const st = e.target.closest('[data-jq]');
   if (st) { const k = +st.dataset.jq; if (jk.r[jk.cur] === k) delete jk.r[jk.cur]; else jk.r[jk.cur] = k; saveJk(); drawJoke(); return; }
+  const cp = e.target.closest('[data-jcopy]');
+  if (cp) {
+    const rows = JOKES.filter(x => jk.r[x.id]);
+    const txt = 'Le mie barzellette votate (da 1 a 3 stelle), ' + rows.length + ' su ' + JOKES.length + ':\n' + [3, 2, 1].map(q => {
+      const l = rows.filter(x => jk.r[x.id] === q);
+      return l.length ? '\n' + '★'.repeat(q) + ' (' + q + (q === 1 ? ' stella' : ' stelle') + '), ' + l.length + ':\n' + l.map(x => '- ' + x.testo + (x.cat ? ' [' + x.cat + ']' : '')).join('\n') : '';
+    }).join('');
+    const ok = () => { cp.textContent = 'Copiato ✓'; setTimeout(() => { if (cp.isConnected) cp.textContent = 'Copia i miei voti'; }, 2200); };
+    const fb = () => { cp.insertAdjacentHTML('afterend', '<textarea id="jOut" readonly aria-label="Voti da copiare" style="width:100%;min-height:120px;border:0;border-radius:16px;background:var(--tile);padding:12px;font-size:13px"></textarea>'); const t = $('jOut'); t.value = txt; t.select(); cp.textContent = 'Seleziona e copia il testo qui sotto'; };
+    try { navigator.clipboard.writeText(txt).then(ok, fb); } catch (err) { fb(); }
+    return;
+  }
   if (e.target.closest('[data-jnext]')) { if (JOKES.length > 1) pickJoke(); drawJoke(); if (JOKES.length === 1) $('dlgJ').close(); }
 });
 // backup
