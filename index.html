@@ -348,6 +348,7 @@ dialog.full{margin:0;width:100%;max-width:none;height:100%;max-height:none;borde
   <details>
     <summary>Backup e note</summary>
     <p class="sync" id="sync"></p>
+    <p class="sync">Versione app <b>1dd5fc</b></p>
     <ul id="notes"></ul>
     <p>Il backup copia tutto lo storico come testo. Incollalo qui sotto su un altro dispositivo e premi Importa per unirlo.</p>
     <div class="row"><button class="ghost" type="button" id="bkCopy">Copia backup</button></div>
@@ -895,5 +896,10 @@ setSync(); render(); connect();
 if (location.hash === '#esempio') setDemo(true);
 })();
 </script>
-<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}</script>
+<script>if('serviceWorker' in navigator){
+  // quando esce una versione nuova l'app si ricarica da sola (i dati restano nel telefono)
+  let had = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (had) location.reload(); had = true; });
+  navigator.serviceWorker.register('sw.js').then(r => { document.addEventListener('visibilitychange', () => { if (!document.hidden) r.update(); }); setInterval(() => r.update(), 600000); });
+}</script>
 </body></html>
