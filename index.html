@@ -294,6 +294,11 @@ dialog.full{margin:0;width:100%;max-width:none;height:100%;max-height:none;borde
 .joke span{display:block;padding-top:18px}
 .jrate{display:flex;align-items:center;justify-content:space-between;gap:10px;font:800 21px/1 var(--display);text-transform:uppercase}
 .jrate .st{font-size:40px;padding:2px 4px}
+.sheet .rkl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.rkl li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;background:var(--tile);border-radius:18px;padding:13px 14px;font:500 14px/1.4 var(--body)}
+.rkl li.first{background:var(--volt);color:var(--on-volt);font:700 17px/1.35 var(--body)}
+.rs{white-space:nowrap;font-size:15px;letter-spacing:1px;padding-top:1px}
+.rs i{font-style:normal;opacity:.25}
 .jmeta{font:500 12px/1.3 var(--body);color:var(--muted);margin:0;text-align:center}
 .peek{position:fixed;z-index:30;width:220px;border-radius:16px;background:#F5F5F5;box-shadow:0 10px 30px rgba(0,0,0,.25);pointer-events:none;padding:6px}
 .peek img{display:block;width:100%;border-radius:12px;mix-blend-mode:multiply}
@@ -348,7 +353,7 @@ dialog.full{margin:0;width:100%;max-width:none;height:100%;max-height:none;borde
   <details>
     <summary>Backup e note</summary>
     <p class="sync" id="sync"></p>
-    <p class="sync">Versione app <b>1dd5fc</b></p>
+    <p class="sync">Versione app <b>4dc930</b></p>
     <ul id="notes"></ul>
     <p>Il backup copia tutto lo storico come testo. Incollalo qui sotto su un altro dispositivo e premi Importa per unirlo.</p>
     <div class="row"><button class="ghost" type="button" id="bkCopy">Copia backup</button></div>
@@ -835,21 +840,42 @@ function pickJoke(){
   const j = pool[Math.floor(Math.random() * pool.length)];
   jk.cur = j.id; jk.seen.push(j.id); saveJk();
 }
+let jView = 'joke';
+const star3 = q => '<span class="rs" aria-label="' + q + ' stelle">' + '★'.repeat(q) + '<i>' + '★'.repeat(3 - q) + '</i></span>';
+// classifica: le barzellette più votate e le categorie per somma delle stelle
+function drawRank(){
+  const rated = JOKES.filter(x => jk.r[x.id]);
+  if (!rated.length) { $('sheetJ').innerHTML = '<div class="grab"></div><div class="eyebrow">Classifica</div><h3>Nessun voto</h3><p class="jmeta">Dai qualche stella alle barzellette e qui vedi quale fa ridere di più.</p><button type="button" class="primary" data-jback>Torna alle barzellette</button>'; return; }
+  const top = rated.slice().sort((a, b) => jk.r[b.id] - jk.r[a.id]).slice(0, 5);
+  const cats = {};
+  rated.forEach(x => { const c = x.cat || 'Altre'; const v = cats[c] || (cats[c] = {n: 0, s: 0}); v.n++; v.s += jk.r[x.id]; });
+  const cr = Object.entries(cats).map(([c, v]) => ({c, n: v.n, s: v.s, m: v.s / v.n})).sort((a, b) => b.s - a.s || b.m - a.m), mx = cr[0].s || 1;
+  const pts = rated.reduce((a, x) => a + jk.r[x.id], 0);
+  $('sheetJ').innerHTML = '<div class="grab"></div><div class="eyebrow">Classifica · ' + rated.length + ' votate, ' + pts + ' stelle in tutto</div><h3>La più divertente</h3>' +
+    '<ol class="rkl">' + top.map((x, i) => '<li class="' + (i === 0 ? 'first' : '') + '">' + star3(jk.r[x.id]) + '<span>' + esc(x.testo) + '</span></li>').join('') + '</ol>' +
+    '<div class="eyebrow">Categorie, somma delle stelle</div>' +
+    '<div class="bars">' + cr.map(r => '<div class="brow"><span>' + esc(r.c) + '</span><div class="track"><div class="fill" style="--dc:var(--hot);width:' + (r.s / mx * 100).toFixed(1) + '%"></div></div><span class="v">' + r.s + ' · ' + fq(r.m) + '★</span></div>').join('') + '</div>' +
+    '<p class="jmeta">Il primo numero è la somma delle stelle, poi la media per barzelletta votata.</p>' +
+    '<button type="button" class="primary" data-jback>Torna alle barzellette</button><button type="button" class="ghost close" data-close="dlgJ">Chiudi</button>';
+}
 function drawJoke(){
+  if (jView === 'rank') return drawRank();
   const j = JOKES.find(x => x.id === jk.cur); if (!j) return;
   const q = jk.r[j.id] || 0, n = Object.keys(jk.r).filter(id => JOKES.some(x => x.id === id)).length;
   $('sheetJ').innerHTML = '<div class="grab"></div><div class="eyebrow">Pausa barzelletta' + (j.cat ? ' · ' + esc(j.cat) : '') + '</div><div class="joke"><span>' + esc(j.testo) + '</span></div>' +
     '<div class="jrate"><span>Quanto fa ridere?</span><span class="stars">' + [1,2,3].map(k => '<button type="button" class="st' + (q >= k ? ' on' : '') + '" data-jq="' + k + '" aria-label="' + k + (k === 1 ? ' stella' : ' stelle') + '" aria-pressed="' + (q >= k) + '">★</button>').join('') + '</span></div>' +
     '<p class="jmeta">Votate ' + n + ' su ' + JOKES.length + '</p>' +
-    '<button type="button" class="primary" data-jnext>' + (JOKES.length > 1 ? 'Un\'altra barzelletta' : 'Ok') + '</button><button type="button" class="ghost close" data-jcopy' + (n ? '' : ' disabled') + '>' + (n ? 'Copia i miei voti' : 'Copia i miei voti (dai prima qualche stella)') + '</button><button type="button" class="ghost close" data-close="dlgJ">Chiudi</button>';
+    '<button type="button" class="primary" data-jnext>' + (JOKES.length > 1 ? 'Un\'altra barzelletta' : 'Ok') + '</button><button type="button" class="ghost close" data-jrank' + (n ? '' : ' disabled') + '>' + (n ? 'Classifica' : 'Classifica (dai prima qualche stella)') + '</button><button type="button" class="ghost close" data-jcopy' + (n ? '' : ' disabled') + '>' + (n ? 'Copia i miei voti' : 'Copia i miei voti (dai prima qualche stella)') + '</button><button type="button" class="ghost close" data-close="dlgJ">Chiudi</button>';
 }
-function openJoke(){ if (!JOKES.length) return; if (!JOKES.some(x => x.id === jk.cur)) pickJoke(); drawJoke(); if (!$('dlgJ').open) $('dlgJ').showModal(); }
+function openJoke(){ if (!JOKES.length) return; jView = 'joke'; if (!JOKES.some(x => x.id === jk.cur)) pickJoke(); drawJoke(); if (!$('dlgJ').open) $('dlgJ').showModal(); }
 $('jtab').hidden = !JOKES.length;
 $('jtab').addEventListener('click', openJoke);
 $('dlgJ').addEventListener('click', e => {
   if (e.target === $('dlgJ')) { $('dlgJ').close(); return; }
   const st = e.target.closest('[data-jq]');
   if (st) { const k = +st.dataset.jq; if (jk.r[jk.cur] === k) delete jk.r[jk.cur]; else jk.r[jk.cur] = k; saveJk(); drawJoke(); return; }
+  if (e.target.closest('[data-jrank]')) { jView = 'rank'; drawJoke(); $('sheetJ').scrollTop = 0; return; }
+  if (e.target.closest('[data-jback]')) { jView = 'joke'; drawJoke(); return; }
   const cp = e.target.closest('[data-jcopy]');
   if (cp) {
     const rows = JOKES.filter(x => jk.r[x.id]);
