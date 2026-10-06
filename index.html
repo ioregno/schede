@@ -103,6 +103,8 @@ details .sync{margin:14px 0 0}
 .chip small{display:block;font:600 8.5px/1.1 var(--body);text-transform:none;opacity:.85;margin-top:2px}
 
 /* allenamento di oggi: card piena nel colore dell'allenamento scelto */
+.pick.vuota{background:linear-gradient(155deg,#2c2c2f,#0b0b0c)}
+.pick.vuota .selname{font-size:36px}
 .pick{background:linear-gradient(155deg,var(--dc),color-mix(in srgb,var(--dc) 72%,#000));box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 16px 36px color-mix(in srgb,var(--dc) 22%,transparent);color:#fff;border-radius:30px;padding:20px 18px 18px;display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden;isolation:isolate}
 .pick::before{content:attr(data-v);position:absolute;right:-6px;bottom:-34px;font:800 210px/1 var(--display);color:#fff;opacity:.11;pointer-events:none;z-index:-1}
 .sugg{font:500 12.5px/1.3 var(--body);color:rgba(255,255,255,.8)}
@@ -326,7 +328,7 @@ dialog.full{margin:0;width:100%;max-width:none;height:100%;max-height:none;borde
   </section>
 
   <ol class="exs" id="exs"></ol>
-  <p class="extra">Spunta gli esercizi che fai: dal 40% si sblocca Termina, dove segni cardio, addominali extra e com'è andata. Tocca il nome di una macchina per vedere foto ed esecuzione, tocca il cerchio per spuntare l'esercizio.</p>
+  <p class="extra" id="exhelp">Spunta gli esercizi che fai: dal 40% si sblocca Termina, dove segni cardio, addominali extra e com'è andata. Tocca il nome di una macchina per vedere foto ed esecuzione, tocca il cerchio per spuntare l'esercizio.</p>
 
   <section class="stats" aria-label="Statistiche">
     <div><div class="eyebrow">Statistiche</div><h2>Cosa alleni di più</h2></div>
@@ -622,11 +624,14 @@ function renderPick(){
   const sg = suggest();
   if (!ui.day || !BY[ui.day] || ui.pickDate !== iso(today())) { ui.day = sg.day; ui.variant = sg.variant; }
   if (ui.variant !== 'A' && ui.variant !== 'B') ui.variant = 'A';
-  const same = ui.day === sg.day && ui.variant === sg.variant;
-  $('why').textContent = (same ? '' : 'Consigliato oggi: ' + BY[sg.day].nome + ' · ' + sg.variant + '. ') + sg.why;
-  $('selName').textContent = BY[ui.day].nome;
-  $('app').style.setProperty('--dc', 'var(--' + ui.day + ')'); $('pick').dataset.v = ui.variant;
-  $('selDay').innerHTML = DAYS.map(d => '<option value="' + d.id + '"' + (d.id === ui.day ? ' selected' : '') + '>' + esc(d.nome) + (d.id === sg.day ? '  ★' : '') + '</option>').join('');
+  // finché non scegli l'allenamento del giorno non si vedono varianti ed esercizi
+  const ch = ui.chosen === iso(today()), same = ui.day === sg.day && ui.variant === sg.variant;
+  $('why').textContent = (ch && same ? '' : 'Consigliato oggi: ' + BY[sg.day].nome + ' · ' + sg.variant + '. ') + sg.why;
+  $('selName').textContent = ch ? BY[ui.day].nome : 'Scegli l\'allenamento';
+  $('pick').classList.toggle('vuota', !ch);
+  $('app').style.setProperty('--dc', ch ? 'var(--' + ui.day + ')' : 'var(--volt)'); $('pick').dataset.v = ch ? ui.variant : '';
+  $('seg').hidden = !ch; $('daynote').hidden = !ch;
+  $('selDay').innerHTML = (ch ? '' : '<option value="" selected disabled>Scegli l\'allenamento</option>') + DAYS.map(d => '<option value="' + d.id + '"' + (ch && d.id === ui.day ? ' selected' : '') + '>' + esc(d.nome) + (d.id === sg.day ? '  ★' : '') + '</option>').join('');
   ['A','B'].forEach(v => {
     $('v' + v).setAttribute('aria-pressed', ui.variant === v);
     const l = sorted().filter(s => s.day === ui.day && s.variant === v).pop();
@@ -649,6 +654,9 @@ function kgRow(e){
     reps + '<div class="last" aria-label="ultime 3 volte">' + last + '</div></div>';
 }
 function renderEx(){
+  const shown = ui.chosen === iso(today());
+  document.querySelector('.bar').hidden = !shown; $('exhelp').hidden = !shown;
+  if (!shown) { $('exs').innerHTML = ''; return; }
   const list = BY[ui.day][ui.variant];
   const ck = ui.checks[iso(today()) + ui.day + ui.variant] || [];
   $('exs').innerHTML = list.map((e, i) => {
@@ -752,7 +760,7 @@ let tt;
 function toast(msg){ const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => t.hidden = true, 2200); }
 
 // eventi
-$('selDay').addEventListener('change', e => { ui.day = e.target.value; ui.pickDate = iso(today()); const l = lastOf(ui.day); ui.variant = l ? (l.variant === 'A' ? 'B' : 'A') : 'A'; saveUi(); renderPick(); renderEx(); });
+$('selDay').addEventListener('change', e => { if (!BY[e.target.value]) return; ui.day = e.target.value; ui.pickDate = ui.chosen = iso(today()); const l = lastOf(ui.day); ui.variant = l ? (l.variant === 'A' ? 'B' : 'A') : 'A'; saveUi(); renderPick(); renderEx(); });
 $('seg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; ui.variant = b.dataset.v; ui.pickDate = iso(today()); saveUi(); renderPick(); renderEx(); });
 $('rng').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; ui.range = +b.dataset.r; saveUi(); renderStats(); });
 $('exs').addEventListener('change', e => {
