@@ -157,9 +157,11 @@ details .sync{margin:14px 0 0}
 .reps button{border:0;background:var(--raise);border-radius:999px;width:48px;height:46px;font:800 17px/1 var(--display);color:var(--ink)}
 .reps button.on{background:var(--ink);color:var(--bg)}
 .last{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:500 12px/1.2 var(--body);color:var(--muted);font-variant-numeric:tabular-nums}
-.last span{color:var(--ink);font-weight:700;background:var(--raise);border-radius:999px;padding:6px 10px;white-space:nowrap}
-.last span small{color:var(--muted);font-weight:500;font-size:11px;margin-right:3px}
-.last span i{font-style:normal;color:var(--muted);font-weight:500;margin-left:2px}
+.last .lp{border:0;font:600 15px/1.2 var(--body);color:var(--ink);background:var(--raise);border-radius:999px;padding:7px 12px;white-space:nowrap}
+.last .lp b{font-weight:800;color:var(--g1t)}
+.last .lp small{color:var(--muted);font-weight:500;font-size:10.5px;margin-left:1px}
+.last .lp.armed{background:var(--g1);color:#fff}
+.last .lp.armed b,.last .lp.armed small{color:#fff}
 .last em{font-style:normal}
 
 /* barra in basso */
@@ -358,7 +360,7 @@ dialog.full{margin:0;width:100%;max-width:none;height:100%;max-height:none;borde
     <summary>Backup e note</summary>
     <p class="sync" id="yinfo"></p>
     <p class="sync" id="sync"></p>
-    <p class="sync">Versione app <b>76f3f9</b></p>
+    <p class="sync">Versione app <b>094ac8</b></p>
     <ul id="notes"></ul>
     <p>Il backup copia tutto lo storico come testo. Incollalo qui sotto su un altro dispositivo e premi Importa per unirlo.</p>
     <div class="row"><button class="ghost" type="button" id="bkCopy">Copia backup</button></div>
@@ -659,7 +661,7 @@ function kgRow(e){
   const now = h.find(k => k.date === t), prev = h.filter(k => k.date < t).slice(0, 3);
   const pk = h.filter(k => k.date < t && k.kg > 0)[0];
   const dm = d => { const x = parse(d); return x.getDate() + '/' + (x.getMonth() + 1); };
-  const last = prev.length ? prev.map(k => '<span><small>' + dm(k.date) + '</small> ' + (k.kg > 0 ? fkg(k.kg) : '–') + (k.rip ? '<i>×' + k.rip + '</i>' : '') + '</span>').join('') : '<em>prima volta</em>';
+  const last = prev.length ? prev.map(k => '<button type="button" class="lp" data-kgdel="' + k.id + '" aria-label="Voce del ' + dm(k.date) + ', tocca due volte per eliminarla"><b>' + (k.kg > 0 ? fkg(k.kg) + ' kg' : '–') + '</b>' + (k.rip ? ' x ' + k.rip : '') + ' <small>(' + dm(k.date) + ')</small></button>').join('') : '<em>prima volta</em>';
   const reps = '<div class="reps" role="group" aria-label="ripetizioni medie">' + [8, 10, 12].map(r => '<button type="button" data-rip="' + r + '" data-key="' + esc(key) + '" class="' + (now && now.rip === r ? 'on' : '') + '" aria-pressed="' + !!(now && now.rip === r) + '" aria-label="' + r + ' ripetizioni">×' + r + '</button>').join('') + '</div>';
   return '<div class="kgrow"><div class="kgbox"><button type="button" data-kgstep="-2.5" data-key="' + esc(key) + '" aria-label="meno 2,5 kg">−</button>' +
     '<input type="text" inputmode="decimal" class="kgin" data-key="' + esc(key) + '" aria-label="kg di oggi" value="' + (now && now.kg > 0 ? fkg(now.kg) : '') + '" placeholder="' + (pk ? fkg(pk.kg) : '0') + '"><span>kg</span>' +
@@ -825,6 +827,13 @@ $('dlgC').addEventListener('change', e => { if (e.target.id === 'cCardio') $('cC
 document.addEventListener('change', e => { const m = e.target.closest('input[data-moveto]'); if (m && moveSession(m.dataset.moveto, m.value)) { if ($('dlgD').open) $('dlgD').close(); toast('Spostato al ' + fmt(m.value)); } });
 document.addEventListener('click', e => { const r = e.target.closest('[data-recap]'); if (r) { if ($('dlgD').open) $('dlgD').close(); openClose(r.dataset.recap); } });
 $('hist').addEventListener('click', e => { const li = e.target.closest('li[data-open]'); if (li && !e.target.closest('.del')) { openDay(li.dataset.open); return; } const b = e.target.closest('.del'); if (!b) return; if (armed === b.dataset.id) { armed = null; removeSession(b.dataset.id); toast('Eliminato'); } else { armed = b.dataset.id; renderHist(); } });
+let kgArmed = null;
+document.addEventListener('click', e => {
+  const lp = e.target.closest('[data-kgdel]'); if (!lp) { if (kgArmed) { kgArmed = null; renderEx(); } return; }
+  const id = lp.dataset.kgdel;
+  if (kgArmed === id) { kgArmed = null; state.kg = (state.kg || []).filter(k => k.id !== id); if (col && !demo) col.doc(id).delete().catch(() => {}); save(); renderEx(); toast('Voce eliminata'); return; }
+  kgArmed = id; renderEx(); const b = document.querySelector('[data-kgdel="' + id + '"]'); if (b) { b.classList.add('armed'); b.textContent = 'Elimina?'; }
+});
 document.addEventListener('click', e => {
   const c = e.target.closest('[data-close]'); if (c) { $(c.dataset.close).close(); return; }
   if (e.target.id === 'addGo') { addSession(e.target.dataset.date, $('addDay').value, $('addVar').value); $('dlgD').close(); toast('Aggiunto il ' + fmt(e.target.dataset.date)); return; }
