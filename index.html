@@ -358,7 +358,7 @@ dialog.full{margin:0;width:100%;max-width:none;height:100%;max-height:none;borde
     <summary>Backup e note</summary>
     <p class="sync" id="yinfo"></p>
     <p class="sync" id="sync"></p>
-    <p class="sync">Versione app <b>fb79f5</b></p>
+    <p class="sync">Versione app <b>76f3f9</b></p>
     <ul id="notes"></ul>
     <p>Il backup copia tutto lo storico come testo. Incollalo qui sotto su un altro dispositivo e premi Importa per unirlo.</p>
     <div class="row"><button class="ghost" type="button" id="bkCopy">Copia backup</button></div>
@@ -814,6 +814,7 @@ $('dlgC').addEventListener('click', e => {
     const ck0 = iso(today()) + ui.day + ui.variant; if (ui.checks[ck0]) { delete ui.checks[ck0]; saveUi(); }   // sessione salvata: le spunte ripartono da zero
     const sn = addSession(iso(today()), ui.day, ui.variant, x);
     e.target.dataset.saved = sn.id;
+    ui.chosen = ''; saveUi(); render();   // sessione chiusa: si riparte da "Scegli l'allenamento"
     const stp = $('stamp'); stp.hidden = false; stp.classList.add('go');
     $('cMsg').hidden = false; $('cMsg').textContent = 'Bravo, sessione chiusa. Ci vediamo alla prossima.';
     e.target.textContent = 'Torna alla scheda'; $('cBack').hidden = true;
