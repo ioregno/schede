@@ -157,6 +157,16 @@ details .sync{margin:14px 0 0}
 .reps button{border:0;background:var(--raise);border-radius:999px;width:48px;height:46px;font:800 17px/1 var(--display);color:var(--ink)}
 .reps button.on{background:var(--ink);color:var(--bg)}
 .last{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:500 12px/1.2 var(--body);color:var(--muted);font-variant-numeric:tabular-nums}
+.cardio{margin-top:16px;display:flex;flex-direction:column;gap:12px}
+.cardio .ctitle{font:600 12px/1 var(--body);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.crow{background:var(--surface);border-radius:18px;padding:12px 14px}
+.chead{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.chead b{font:800 20px/1 var(--display);text-transform:uppercase}
+.chead span{font:500 13px/1.2 var(--body);color:var(--muted)}
+.cdates{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.cdates span{background:var(--raise);border-radius:999px;padding:6px 11px;font:600 14px/1.2 var(--body);white-space:nowrap}
+.cdates b{font-weight:800;color:var(--g1t)}
+.cdates small{color:var(--muted);font-size:10.5px;font-weight:500}
 .last .lp{border:0;font:600 15px/1.2 var(--body);color:var(--ink);background:var(--raise);border-radius:999px;padding:7px 12px;white-space:nowrap}
 .last .lp b{font-weight:800;color:var(--g1t)}
 .last .lp small{color:var(--muted);font-weight:500;font-size:10.5px;margin-left:1px}
@@ -360,7 +370,7 @@ dialog.full{margin:0;width:100%;max-width:none;height:100%;max-height:none;borde
     <summary>Backup e note</summary>
     <p class="sync" id="yinfo"></p>
     <p class="sync" id="sync"></p>
-    <p class="sync">Versione app <b>094ac8</b></p>
+    <p class="sync">Versione app <b>71f0fd</b></p>
     <ul id="notes"></ul>
     <p>Il backup copia tutto lo storico come testo. Incollalo qui sotto su un altro dispositivo e premi Importa per unirlo.</p>
     <div class="row"><button class="ghost" type="button" id="bkCopy">Copia backup</button></div>
@@ -715,6 +725,15 @@ function cardioLine(ss){
   return ' Cardio <b>' + tot + ' min</b>' + (Object.keys(by).length ? ' (' + Object.keys(by).map(k => CARDIO[k].toLowerCase() + ' ' + by[k]).join(', ') + ')' : '') + ' in ' + c.length + ' sessioni' +
     (a.length ? ', addominali extra in ' + a.length + ' sessioni' : '') + '.';
 }
+function cardioBlock(ss){
+  const dm = d => { const x = parse(d); return x.getDate() + '/' + (x.getMonth() + 1); };
+  const rows = Object.keys(CARDIO).map(k => {
+    const l = ss.filter(s => s.cardio && s.cardio.t === k).sort((a, b) => a.date < b.date ? 1 : -1);
+    return l.length ? '<div class="crow"><div class="chead"><b>' + CARDIO[k] + '</b><span>' + l.length + (l.length === 1 ? ' volta' : ' volte') + ' · ' + l.reduce((x, s) => x + s.cardio.m, 0) + ' min</span></div>' +
+      '<div class="cdates">' + l.map(s => '<span><b>' + s.cardio.m + '′</b> <small>(' + dm(s.date) + ')</small></span>').join('') + '</div></div>' : '';
+  }).join('');
+  return rows ? '<div class="cardio"><small class="ctitle">Cardio</small>' + rows + '</div>' : '';
+}
 function renderStats(){
   document.querySelectorAll('#rng button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.r === ui.range));
   const st = stats(ui.range);
@@ -725,7 +744,8 @@ function renderStats(){
   let h = '<div class="top2"><div><small>Alleni di più</small>' + nm(rows[0].d) + '<span>' + rows[0].n + (rows[0].n === 1 ? ' sessione' : ' sessioni') + '</span></div>' +
     '<div><small>Alleni meglio</small>' + (best ? nm(best.d) + '<span>' + fq(best.q) + ' ★ di media</span>' : '<span>Dai le stelle a fine allenamento</span>') + '</div></div>';
   h += '<div class="bars">' + rows.map(r => '<div class="brow' + (r.n ? '' : ' zero') + '"><span>' + esc(r.d.nome) + '</span><div class="track"><div class="fill c-' + r.d.id + '" style="width:' + (r.n / max * 100).toFixed(1) + '%"></div></div><span class="v">' + r.n + (r.n === 1 ? ' sessione' : ' sessioni') + '</span></div>').join('') + '</div>';
-  const cl = cardioLine(st.ss); if (cl) h += '<p class="extra">' + cl.trim() + '</p>';
+  h += cardioBlock(st.ss);
+  const a = st.ss.filter(s => s.abs); if (a.length) h += '<p class="extra">Addominali extra in ' + a.length + (a.length === 1 ? ' sessione' : ' sessioni') + '.</p>';
   $('statbody').innerHTML = h;
 }
 
