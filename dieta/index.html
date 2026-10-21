@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Dieta">
+<meta name="theme-color" content="#111111">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Dieta</title>
+<style>
+:root{--bg:#f4f5f2;--card:#fff;--tx:#14170f;--mute:#6b7064;--line:#e3e5de;--acc:#2f7d32;--accbg:#e4f2e3;--bad:#d4380d;--p:#2346f5;--c:#e08a00;--f:#7b3fe4}
+@media(prefers-color-scheme:dark){:root{--bg:#0d0f0b;--card:#181b15;--tx:#f0f2ea;--mute:#9aa090;--line:#2a2e25;--acc:#a6e22e;--accbg:#232b17;--bad:#ff7a59;--p:#7b97ff;--c:#ffb340;--f:#b790ff}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 -apple-system,system-ui,sans-serif;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+main{max-width:560px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 16px 16px}
+h1{font-size:26px;margin:4px 0 12px;letter-spacing:-.5px}h2{font-size:17px;margin:20px 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.mute{color:var(--mute);font-size:13px}.row{display:flex;align-items:center;gap:10px}.sp{justify-content:space-between}
+.big{font-size:44px;font-weight:800;letter-spacing:-1.5px;line-height:1}
+.bar{height:10px;border-radius:6px;background:var(--line);overflow:hidden;margin:8px 0 2px}.bar>i{display:block;height:100%;background:var(--acc);border-radius:6px}
+.over>i{background:var(--bad)!important}
+.macros{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.macros b{font-size:18px}
+button,.btn{font:inherit;border:0;border-radius:12px;padding:10px 14px;background:var(--accbg);color:var(--acc);font-weight:700}
+button.pri{background:var(--acc);color:var(--bg)}button.ghost{background:none;color:var(--mute);padding:6px 8px}button.del{background:none;color:var(--bad);padding:4px 10px;font-size:20px}
+input,select{font:inherit;width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--tx)}
+label{display:block;font-size:13px;color:var(--mute);margin:10px 0 4px}
+.it{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-top:1px solid var(--line)}.it:first-of-type{border-top:0}
+.it small{display:block;color:var(--mute)}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+nav button{flex:1;background:none;color:var(--mute);font-size:12px;padding:8px 2px}nav button.on{color:var(--acc)}nav span{display:block;font-size:20px}
+.modal{position:fixed;inset:0;background:#0008;display:flex;align-items:flex-end;z-index:9}.modal>div{background:var(--card);width:100%;max-height:88vh;overflow:auto;border-radius:20px 20px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom));max-width:560px;margin:0 auto}
+.tag{font-size:11px;background:var(--accbg);color:var(--acc);padding:2px 7px;border-radius:8px;margin-left:6px;font-weight:700}
+.warn{border-left:4px solid var(--c);padding-left:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+a{color:var(--acc)}svg text{fill:var(--mute);font-size:10px}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<nav id="nav"></nav>
+<script>
+// ---------- dati ----------
+// valori per 100 g: [kcal, proteine, carboidrati, grassi]. Sono stime da tabelle standard (CREA / USDA):
+// le etichette dei prodotti reali variano, in caso correggi il cibo dalla scheda Cibi.
+const FOODS0=[
+ {id:'pollo',n:'Petto di pollo (crudo)',k:110,p:23,c:0,f:1.5,g:150,u:'1 filetto'},
+ {id:'macinato',n:'Macinato di manzo magro (crudo)',k:175,p:20,c:0,f:10,g:120,u:'1 hamburger'},
+ {id:'ceci',n:'Ceci cotti (scolati)',k:135,p:7,c:20,f:2.6,g:150,u:'1 porzione'},
+ {id:'fagioli',n:'Fagioli cotti (scolati)',k:115,p:7.5,c:19,f:0.5,g:150,u:'1 porzione'},
+ {id:'avena',n:'Farina / fiocchi d\'avena (secchi)',k:372,p:13.5,c:59,f:7,g:50,u:'1 porzione'},
+ {id:'latteps',n:'Latte parzialmente scremato',k:46,p:3.3,c:4.9,f:1.6,g:200,u:'1 bicchiere'},
+ {id:'latteint',n:'Latte intero',k:64,p:3.3,c:4.9,f:3.6,g:200,u:'1 bicchiere'},
+ {id:'caffe',n:'Caffè (senza zucchero)',k:2,p:0.1,c:0.3,f:0,g:30,u:'1 tazzina'},
+ {id:'te',n:'Tè (senza zucchero)',k:1,p:0,c:0.2,f:0,g:250,u:'1 tazza'},
+ {id:'gnocchi',n:'Gnocchi di patate (crudi)',k:155,p:3.5,c:34,f:0.4,g:150,u:'1 porzione'},
+ {id:'pasta',n:'Pasta di semola (cruda)',k:355,p:12.5,c:72,f:1.5,g:80,u:'1 porzione'},
+ {id:'passata',n:'Passata di pomodoro',k:24,p:1.2,c:4,f:0.2,g:100,u:'1 porzione'},
+ {id:'basmati',n:'Riso basmati (crudo)',k:350,p:8,c:77,f:0.8,g:80,u:'1 porzione'},
+ {id:'tofu',n:'Tofu naturale',k:120,p:12,c:2,f:7,g:125,u:'1 panetto'},
+ {id:'patate',n:'Patate al forno (poco olio)',k:120,p:2.4,c:20,f:3.5,g:250,u:'1 porzione'},
+ {id:'evo',n:'Olio extravergine d\'oliva',k:884,p:0,c:0,f:100,g:10,u:'1 cucchiaio',s:1},
+ {id:'uova',n:'Uova (intere)',k:143,p:12.6,c:0.7,f:9.5,g:60,u:'1 uovo',s:1},
+ {id:'yogurt',n:'Yogurt greco 0%',k:59,p:10,c:3.6,f:0.4,g:170,u:'1 vasetto',s:1},
+ {id:'tonno',n:'Tonno al naturale (sgocciolato)',k:100,p:23,c:0,f:1,g:80,u:'1 scatoletta',s:1},
+ {id:'pane',n:'Pane integrale',k:250,p:9,c:45,f:3,g:50,u:'1 fetta grande',s:1},
+ {id:'verdura',n:'Verdura mista (cotta o cruda)',k:25,p:2,c:4,f:0.3,g:200,u:'1 contorno',s:1},
+ {id:'banana',n:'Banana',k:89,p:1.1,c:23,f:0.3,g:120,u:'1 banana',s:1},
+ {id:'mela',n:'Mela',k:52,p:0.3,c:14,f:0.2,g:180,u:'1 mela',s:1},
+ {id:'mandorle',n:'Mandorle',k:579,p:21,c:22,f:50,g:30,u:'1 manciata',s:1}
+];
+const MEALS=[['col','Colazione',.2],['pra','Pranzo',.35],['cen','Cena',.35],['spu','Spuntini',.1]];
+const PAL=[[1.4,'Sedentario + 3-4 allenamenti leggeri (1,4)'],[1.55,'Sedentario + 3-4 allenamenti medi (1,55)'],[1.725,'Molto attivo (1,725)']];
+const LS='dieta-v1';
+let S;
+function load(){try{S=JSON.parse(localStorage.getItem(LS))}catch(e){}
+ if(!S||!S.profile){S={profile:{sex:'m',age:29,h:185,pal:1.55,kcal:2700,protG:1.8,fatG:0.9},custom:[],edits:{},log:[],weights:[{d:ymd(new Date()),kg:90.3,fat:20.3,mus:68.4,waist:null,note:'bilancia'}]};save()}}
+function save(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
+const foods=()=>FOODS0.map(f=>({...f,...(S.edits[f.id]||{})})).concat(S.custom);
+const food=id=>foods().find(f=>f.id===id);
+// ---------- util ----------
+function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function addDays(s,n){const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return ymd(d)}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const r0=x=>Math.round(x),r1=x=>Math.round(x*10)/10;
+const nut=(f,g)=>({k:f.k*g/100,p:f.p*g/100,c:f.c*g/100,f:f.f*g/100});
+const sum=(a)=>a.reduce((t,x)=>({k:t.k+x.k,p:t.p+x.p,c:t.c+x.c,f:t.f+x.f}),{k:0,p:0,c:0,f:0});
+const dayD=d=>new Date(d+'T12:00:00').toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'});
+function lastW(){return [...S.weights].sort((a,b)=>a.d<b.d?-1:1).slice(-1)[0]}
+function weightNow(){const w=lastW();return w?w.kg:90}
+function targets(){const P=S.profile,kg=weightNow();const p=P.protG*kg,f=P.fatG*kg,c=Math.max(0,(P.kcal-4*p-9*f)/4);return{k:P.kcal,p,f,c}}
+function bmr(kg){const P=S.profile;return 10*kg+6.25*P.h-5*P.age+(P.sex==='m'?5:-161)}
+// ---------- stato UI ----------
+let tab='oggi',date=ymd(new Date()),q='',kcalTarget=null,modal=null;
+const $=s=>document.querySelector(s);
+function render(){
+ const t={oggi:vOggi,porz:vPorz,cibi:vCibi,peso:vPeso,analisi:vAnalisi}[tab]();
+ $('#app').innerHTML=t+(modal||'');
+ $('#nav').innerHTML=[['oggi','🍽️','Oggi'],['porz','⚖️','Porzioni'],['cibi','🥣','Cibi'],['peso','📈','Peso'],['analisi','🧪','Analisi']].map(x=>`<button class="${tab===x[0]?'on':''}" onclick="go('${x[0]}')"><span>${x[1]}</span>${x[2]}</button>`).join('');
+}
+function go(t){tab=t;modal=null;q='';window.scrollTo(0,0);render()}
+// ---------- OGGI ----------
+function dayLog(d){return S.log.filter(e=>e.d===d)}
+function vOggi(){
+ const T=targets(),L=dayLog(date),tot=sum(L.map(e=>nut(food(e.f)||{k:0,p:0,c:0,f:0},e.g)));
+ const rest=T.k-tot.k,pc=Math.min(100,tot.k/T.k*100);
+ const mb=(l,v,t,col)=>`<div><div class="mute">${l}</div><b>${r0(v)}</b><span class="mute"> / ${r0(t)} g</span><div class="bar ${v>t*1.1?'over':''}"><i style="width:${Math.min(100,v/t*100)}%;background:${col}"></i></div></div>`;
+ return `<h1>${date===ymd(new Date())?'Oggi':'Giorno'}</h1>
+ <div class="row sp"><button class="ghost" onclick="date=addDays(date,-1);render()">‹</button><span>${dayD(date)}</span><button class="ghost" onclick="date=addDays(date,1);render()">›</button></div>
+ <div class="card" style="margin-top:10px"><div class="row sp"><div><div class="big" style="${rest<0?'color:var(--bad)':''}">${r0(Math.abs(rest))}</div><div class="mute">${rest>=0?'kcal che restano':'kcal sopra il budget'}</div></div><div style="text-align:right"><b>${r0(tot.k)}</b> <span class="mute">/ ${T.k} kcal</span></div></div>
+ <div class="bar ${rest<0?'over':''}"><i style="width:${pc}%"></i></div>
+ <div class="macros" style="margin-top:12px">${mb('Proteine',tot.p,T.p,'var(--p)')}${mb('Carbo',tot.c,T.c,'var(--c)')}${mb('Grassi',tot.f,T.f,'var(--f)')}</div></div>
+ ${MEALS.map(([id,n,sh])=>{const m=L.filter(e=>e.m===id),mt=sum(m.map(e=>nut(food(e.f)||{k:0,p:0,c:0,f:0},e.g)));
+  return `<div class="card"><div class="row sp"><b>${n}</b><span class="mute">${r0(mt.k)} / ~${r0(T.k*sh)} kcal</span></div>
+  ${m.map(e=>{const f=food(e.f);return f?`<div class="it"><div>${esc(f.n)}<small>${e.g} g · ${r0(nut(f,e.g).k)} kcal · P ${r0(nut(f,e.g).p)}</small></div><button class="del" onclick="delE('${e.i}')">×</button></div>`:''}).join('')}
+  <div class="row" style="margin-top:8px"><button onclick="openAdd('${id}')">+ Aggiungi</button>${!m.length?`<button class="ghost" onclick="copyY('${id}')">Copia da ieri</button>`:''}</div></div>`}).join('')}`;
+}
+function delE(i){S.log=S.log.filter(e=>e.i!==i);save();render()}
+function copyY(m){const y=addDays(date,-1);S.log.filter(e=>e.d===y&&e.m===m).forEach(e=>S.log.push({...e,d:date,i:uid()}));save();render()}
+const uid=()=>Math.random().toString(36).slice(2,10);
+let sel=null;
+function openAdd(m){sel={m,f:null,g:0};q='';drawAdd()}
+function drawAdd(){
+ const list=foods().filter(f=>f.n.toLowerCase().includes(q.toLowerCase()));
+ let h=`<div class="modal" onclick="if(event.target===this){modal=null;render()}"><div><div class="row sp"><b>Aggiungi a ${MEALS.find(x=>x[0]===sel.m)[1]}</b><button class="ghost" onclick="modal=null;render()">Chiudi</button></div>`;
+ if(!sel.f){h+=`<input placeholder="Cerca un cibo" value="${esc(q)}" oninput="q=this.value;updList()" style="margin:10px 0"><div id="alist">`+alist(list)+`</div></div></div>`}
+ else{const f=food(sel.f),n=nut(f,sel.g||0);
+  h+=`<p><b>${esc(f.n)}</b><br><span class="mute">${f.u} ≈ ${f.g} g</span></p>
+  <label>Quantità in grammi</label><input type="number" inputmode="decimal" id="gq" value="${sel.g||''}" oninput="sel.g=+this.value;updPrev()">
+  <div class="row" style="margin-top:8px;flex-wrap:wrap"><button onclick="setG(${f.g})">${f.u}</button><button onclick="setG(${f.g*2})">×2</button><button onclick="setG(${r0(f.g/2)})">½</button><button onclick="setG(${sel.g+10})">+10</button></div>
+  <p id="prev" class="mute">${r0(n.k)} kcal · P ${r0(n.p)} · C ${r0(n.c)} · G ${r0(n.f)}</p>
+  <div class="row"><button class="ghost" onclick="sel.f=null;drawAdd()">‹ Indietro</button><button class="pri" style="flex:1" onclick="addE()">Salva</button></div></div></div>`}
+ modal=h;render();
+}
+function alist(list){return list.map(f=>`<div class="it" onclick="pick('${f.id}')"><div>${esc(f.n)}${f.s?'<span class="tag">suggerito</span>':''}<small>${f.k} kcal · P ${f.p} · C ${f.c} · G ${f.f} (per 100 g)</small></div><span class="mute">›</span></div>`).join('')}
+function updList(){$('#alist').innerHTML=alist(foods().filter(f=>f.n.toLowerCase().includes(q.toLowerCase())))}
+function pick(id){sel.f=id;sel.g=food(id).g;drawAdd()}
+function setG(g){sel.g=g;drawAdd()}
+function updPrev(){const n=nut(food(sel.f),sel.g||0);$('#prev').textContent=`${r0(n.k)} kcal · P ${r0(n.p)} · C ${r0(n.c)} · G ${r0(n.f)}`}
+function addE(){if(!sel.g||sel.g<=0)return;S.log.push({i:uid(),d:date,m:sel.m,f:sel.f,g:sel.g});save();modal=null;render()}
+// ---------- PORZIONI ----------
+function vPorz(){
+ const T=targets(),tot=sum(dayLog(date).map(e=>nut(food(e.f)||{k:0,p:0,c:0,f:0},e.g)));
+ if(kcalTarget===null)kcalTarget=Math.max(0,r0(Math.min(T.k*.35,Math.max(0,T.k-tot.k))/10)*10);
+ const l=foods().map(f=>{const g=Math.round(kcalTarget/f.k*100/5)*5;return{f,g,n:nut(f,g)}}).sort((a,b)=>b.n.p-a.n.p);
+ return `<h1>Porzioni</h1><div class="card"><div class="mute">Quanti grammi di ogni cibo valgono questo budget, da solo. Mettiti le kcal del pasto e scegli.</div>
+ <label>Kcal da usare</label><input type="number" inputmode="numeric" value="${kcalTarget}" oninput="kcalTarget=+this.value||0;renderList()">
+ <div class="row" style="margin-top:8px;flex-wrap:wrap">${MEALS.map(m=>`<button onclick="kcalTarget=${r0(T.k*m[2]/10)*10};render()">${m[1]} ${r0(T.k*m[2])}</button>`).join('')}<button onclick="kcalTarget=${r0(Math.max(0,T.k-tot.k)/10)*10};render()">Restanti oggi</button></div></div>
+ <div class="card" id="plist">${plist(l)}</div><div class="mute">Ordinati per proteine: in alto i cibi più "sazianti" per le kcal che hai. Un pasto vero è una combinazione, di solito una fonte proteica + un carboidrato + verdura.</div>`;
+}
+function plist(l){return l.map(x=>`<div class="it"><div>${esc(x.f.n)}<small>P ${r0(x.n.p)} · C ${r0(x.n.c)} · G ${r0(x.n.f)}</small></div><b>${x.g} g</b></div>`).join('')}
+function renderList(){const l=foods().map(f=>{const g=Math.round(kcalTarget/f.k*100/5)*5;return{f,g,n:nut(f,g)}}).sort((a,b)=>b.n.p-a.n.p);$('#plist').innerHTML=plist(l)}
+// ---------- CIBI ----------
+function vCibi(){
+ const l=foods().filter(f=>f.n.toLowerCase().includes(q.toLowerCase()));
+ return `<h1>Cibi</h1><input placeholder="Cerca" value="${esc(q)}" oninput="q=this.value;go2()" style="margin-bottom:12px"><div class="card" id="flist">${flist(l)}</div>
+ <button class="pri" onclick="editF(null)">+ Nuovo cibo</button><p class="mute">I cibi con "suggerito" non erano nella tua lista: li ho aggiunti per verdura, frutta e grassi buoni. Valori per 100 g da tabelle standard: se la tua etichetta dice altro, toccalo e correggi.</p>`;
+}
+function flist(l){return l.map(f=>`<div class="it" onclick="editF('${f.id}')"><div>${esc(f.n)}${f.s?'<span class="tag">suggerito</span>':''}<small>${f.k} kcal · P ${f.p} · C ${f.c} · G ${f.f}</small></div><span class="mute">›</span></div>`).join('')}
+function go2(){const l=foods().filter(f=>f.n.toLowerCase().includes(q.toLowerCase()));$('#flist').innerHTML=flist(l)}
+function editF(id){const f=id?food(id):{n:'',k:'',p:'',c:'',f:'',g:100,u:'1 porzione'};
+ modal=`<div class="modal" onclick="if(event.target===this){modal=null;render()}"><div><b>${id?'Modifica':'Nuovo'} cibo</b>
+ <label>Nome</label><input id="fn" value="${esc(f.n)}"><div class="grid2"><div><label>Kcal /100 g</label><input id="fk" type="number" value="${f.k}"></div><div><label>Proteine</label><input id="fp" type="number" value="${f.p}"></div><div><label>Carboidrati</label><input id="fc" type="number" value="${f.c}"></div><div><label>Grassi</label><input id="ff" type="number" value="${f.f}"></div><div><label>Porzione (g)</label><input id="fg" type="number" value="${f.g}"></div><div><label>Nome porzione</label><input id="fu" value="${esc(f.u)}"></div></div>
+ <div class="row" style="margin-top:14px"><button class="ghost" onclick="modal=null;render()">Annulla</button>${id&&S.custom.find(x=>x.id===id)?`<button class="del" onclick="delF('${id}')">Elimina</button>`:''}<button class="pri" style="flex:1" onclick="saveF('${id||''}')">Salva</button></div></div></div>`;render()}
+function saveF(id){const v={n:$('#fn').value.trim(),k:+$('#fk').value,p:+$('#fp').value,c:+$('#fc').value,f:+$('#ff').value,g:+$('#fg').value||100,u:$('#fu').value||'1 porzione'};if(!v.n)return;
+ if(!id)S.custom.push({id:'c'+uid(),...v});else if(S.custom.find(x=>x.id===id))Object.assign(S.custom.find(x=>x.id===id),v);else S.edits[id]=v;
+ save();modal=null;render()}
+function delF(id){S.custom=S.custom.filter(x=>x.id!==id);save();modal=null;render()}
+// ---------- PESO ----------
+function vPeso(){
+ const W=[...S.weights].sort((a,b)=>a.d<b.d?-1:1);
+ let svg='';
+ if(W.length>1){const w=320,h=120,ks=W.map(x=>x.kg),mn=Math.min(...ks)-1,mx=Math.max(...ks)+1,t0=new Date(W[0].d),t1=new Date(W[W.length-1].d),dt=Math.max(1,t1-t0);
+  const pts=W.map(x=>[8+(new Date(x.d)-t0)/dt*(w-16),h-14-(x.kg-mn)/(mx-mn)*(h-28)]);
+  svg=`<svg viewBox="0 0 ${w} ${h}" width="100%"><polyline fill="none" stroke="var(--acc)" stroke-width="2.5" points="${pts.map(p=>p.join(',')).join(' ')}"/>${pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="var(--acc)"/>`).join('')}<text x="4" y="10">${r1(mx)} kg</text><text x="4" y="${h-2}">${r1(mn)} kg</text></svg>`}
+ const wk=weekTrend();
+ return `<h1>Peso e misure</h1><div class="card">${svg||'<div class="mute">Aggiungi almeno 2 misure per vedere il grafico.</div>'}${wk?`<p style="margin:8px 0 0"><b>${wk.v>0?'+':''}${r1(wk.v)} kg a settimana</b><br><span class="mute">${wk.t}</span></p>`:''}</div>
+ <button class="pri" onclick="addW()">+ Nuova misura</button>
+ <div class="card" style="margin-top:12px">${[...W].reverse().map(x=>`<div class="it"><div>${new Date(x.d+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'short',year:'numeric'})}<small>${x.fat?'grasso '+x.fat+'% · ':''}${x.mus?'muscolo '+x.mus+' kg · ':''}${x.waist?'vita '+x.waist+' cm':''}</small></div><div class="row"><b>${x.kg} kg</b><button class="del" onclick="delW('${x.d}')">×</button></div></div>`).join('')}</div>
+ <p class="mute">Pesati sempre alla stessa ora (meglio la mattina, dopo il bagno e prima di mangiare). Conta la media della settimana, non il singolo giorno: il peso oscilla anche di 1-2 kg per acqua e cibo.</p>`;
+}
+function weekTrend(){const W=[...S.weights].sort((a,b)=>a.d<b.d?-1:1);if(W.length<2)return null;
+ const last=W[W.length-1],ref=W.filter(x=>(new Date(last.d)-new Date(x.d))/864e5>=6)[0]&&W.filter(x=>(new Date(last.d)-new Date(x.d))/864e5>=6).slice(-1)[0];if(!ref)return null;
+ const days=(new Date(last.d)-new Date(ref.d))/864e5,v=(last.kg-ref.kg)/days*7;
+ const t=Math.abs(v)<=.25?'Stabile: coerente con il mantenimento.':v>0?'Sali più del previsto: se resta così per 2-3 settimane, togli circa 150 kcal dal budget.':'Scendi: se non è voluto, aggiungi circa 150 kcal.';return{v,t}}
+function addW(){const l=lastW();modal=`<div class="modal" onclick="if(event.target===this){modal=null;render()}"><div><b>Nuova misura</b><label>Data</label><input id="wd" type="date" value="${ymd(new Date())}"><div class="grid2"><div><label>Peso (kg)</label><input id="wk" type="number" step="0.1" value="${l?l.kg:''}"></div><div><label>Grasso (%)</label><input id="wf" type="number" step="0.1" placeholder="opzionale"></div><div><label>Muscolo (kg)</label><input id="wm" type="number" step="0.1" placeholder="opzionale"></div><div><label>Vita (cm)</label><input id="ww" type="number" step="0.5" placeholder="opzionale"></div></div><div class="row" style="margin-top:14px"><button class="ghost" onclick="modal=null;render()">Annulla</button><button class="pri" style="flex:1" onclick="saveW()">Salva</button></div></div></div>`;render()}
+function saveW(){const kg=+$('#wk').value;if(!kg)return;const d=$('#wd').value;S.weights=S.weights.filter(x=>x.d!==d);S.weights.push({d,kg,fat:+$('#wf').value||null,mus:+$('#wm').value||null,waist:+$('#ww').value||null});save();modal=null;render()}
+function delW(d){S.weights=S.weights.filter(x=>x.d!==d);save();render()}
+// ---------- ANALISI ----------
+function vAnalisi(){
+ const P=S.profile,l=lastW(),kg=l.kg,h=P.h/100,b=bmr(kg),T=targets();
+ const bmi=kg/h/h,fm=l.fat?kg*l.fat/100:null,ffm=fm!==null?kg-fm:null;
+ const ffmi=ffm?ffm/h/h:null,ffmin=ffmi?ffmi+6.1*(1.8-h):null,kat=ffm?370+21.6*ffm:null;
+ const wth=l.waist?l.waist/P.h:null;
+ return `<h1>Analisi</h1>
+ <div class="card"><b>I tuoi numeri</b><div class="mute">Ultima misura: ${l.d}</div>
+ <div class="it"><span>Peso / BMI</span><b>${kg} kg · ${r1(bmi)}</b></div>
+ ${fm!==null?`<div class="it"><span>Massa grassa / magra</span><b>${r1(fm)} / ${r1(ffm)} kg</b></div><div class="it"><span>FFMI (indice massa magra)</span><b>${r1(ffmi)} (norm. ${r1(ffmin)})</b></div>`:''}
+ ${wth?`<div class="it"><span>Vita / altezza</span><b>${wth.toFixed(2)}</b></div>`:''}
+ <div class="it"><span>Metabolismo basale (Mifflin-St Jeor)</span><b>${r0(b)} kcal</b></div>
+ ${kat?`<div class="it"><span>Basale (Katch-McArdle)</span><b>${r0(kat)} kcal</b></div>`:''}
+ <div class="it"><span>Fabbisogno stimato (×${P.pal})</span><b>${r0(b*P.pal)} kcal</b></div>
+ <div class="it"><span>Il tuo budget</span><b>${T.k} kcal</b></div>
+ <div class="it"><span>Proteine / carbo / grassi</span><b>${r0(T.p)} / ${r0(T.c)} / ${r0(T.f)} g</b></div></div>
+ <div class="card warn"><b>Come leggerli, onestamente</b>
+ <p>Il BMI ${r1(bmi)} è nella fascia "sovrappeso" ma il BMI non distingue muscolo e grasso. ${fm!==null?`Col grasso al ${l.fat}% (stima della bilancia, errore tipico di qualche punto percentuale) il quadro è nella media per la tua età: non sei "solo muscolo", e nemmeno fuori controllo.`:'Senza % di grasso non posso dire di più.'}</p>
+ <p>${wth?(wth<0.5?'Vita/altezza sotto 0,5: buon segno.':'Vita/altezza sopra 0,5: tienila d\'occhio.'):'Misura la vita col metro (all\'altezza dell\'ombelico, a fine espirazione) e inseriscila in Peso: è un indicatore più utile del BMI e non dipende dall\'acqua.'}</p>
+ <p>Tutte queste cifre sono stime da formule su popolazioni, non misure su di te. Il budget va corretto sull'andamento del peso medio dopo 2-3 settimane, non sulle formule.</p></div>
+ <div class="card"><b>Costituzione (somatotipo)</b>
+ <p><b>Ectomorfo:</b> magro, ossa sottili, fatica a mettere peso.<br><b>Mesomorfo:</b> struttura atletica, mette muscolo facilmente.<br><b>Endomorfo:</b> struttura più larga, accumula grasso con facilità.</p>
+ <p>Dalla tua descrizione (metti peso in fretta e muscolo in fretta) la tendenza sarebbe <b>mesomorfo-endomorfo</b>. È un'impressione, non una diagnosi: la classificazione seria (Heath-Carter) richiede plicometro e misure delle circonferenze. Inoltre il somatotipo descrive la forma del corpo e non predice quanto cresci: per questo il budget lo regoliamo sui tuoi dati e non sul tipo.</p></div>
+ <div class="card"><b>Impostazioni</b>
+ <div class="grid2"><div><label>Età</label><input id="sa" type="number" value="${P.age}"></div><div><label>Altezza (cm)</label><input id="sh" type="number" value="${P.h}"></div></div>
+ <label>Attività</label><select id="sp">${PAL.map(p=>`<option value="${p[0]}" ${p[0]===P.pal?'selected':''}>${p[1]}</option>`).join('')}</select>
+ <div class="grid2"><div><label>Budget kcal / giorno</label><input id="sk" type="number" value="${P.kcal}"></div><div><label>Proteine g/kg</label><input id="spr" type="number" step="0.1" value="${P.protG}"></div><div><label>Grassi g/kg</label><input id="sf" type="number" step="0.1" value="${P.fatG}"></div><div><label>Sesso</label><select id="ss"><option value="m" ${P.sex==='m'?'selected':''}>M</option><option value="f" ${P.sex==='f'?'selected':''}>F</option></select></div></div>
+ <p class="mute">Stima per te: ${r0(b*1.4)}-${r0(b*1.6)} kcal di mantenimento. Il default 2700 è prudente (sotto la stima alta) per non sforare.</p>
+ <button class="pri" onclick="saveP()">Salva</button></div>
+ <div class="card"><b>Backup</b><p class="mute">I dati stanno solo su questo telefono. Copia il backup per spostarli o conservarli.</p><button onclick="bk()">Copia backup</button> <button onclick="rs()">Ripristina</button><div id="bkm" class="mute"></div></div>
+ <div class="card mute"><b>Fonti</b> (dalla mia conoscenza, da verificare con il nutrizionista)<br>• Mifflin MD et al., Am J Clin Nutr 1990;51:241 (metabolismo basale)<br>• Katch-McArdle (basale da massa magra)<br>• FAO/WHO/UNU 2004, fattori di attività (PAL)<br>• Morton RW et al., Br J Sports Med 2018;52:376 (proteine ~1,6 g/kg e oltre per massa muscolare)<br>• Jäger R et al., ISSN position stand, J Int Soc Sports Nutr 2017 (1,4-2,0 g/kg)<br>• Kouri EM et al., Clin J Sport Med 1995 (FFMI)<br>• Heath BH, Carter JEL, Am J Phys Anthropol 1967 (somatotipo)<br>• OMS: classi di BMI. Tabelle cibi: stime CREA / USDA.</div>`;
+}
+function saveP(){const P=S.profile;P.age=+$('#sa').value;P.h=+$('#sh').value;P.pal=+$('#sp').value;P.kcal=+$('#sk').value;P.protG=+$('#spr').value;P.fatG=+$('#sf').value;P.sex=$('#ss').value;save();render()}
+function bk(){const t=JSON.stringify(S);(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>$('#bkm').textContent='Copiato.').catch(()=>{$('#bkm').textContent='Copia manuale:';prompt('Backup',t)})}
+function rs(){const t=prompt('Incolla il backup');if(!t)return;try{const x=JSON.parse(t);if(!x.profile)throw 0;S=x;save();render()}catch(e){alert('Backup non valido')}}
+load();render();
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
