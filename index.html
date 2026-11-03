@@ -1,8 +1,8 @@
 <!doctype html><html lang="it"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="Scheda GT">
-<meta name="theme-color" content="#111111" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#D8FF00" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="apple-mobile-web-app-title" content="Scheda GT">
+<meta name="theme-color" content="#0A0A0A">
 <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png">
 </head><body>
 <title>Scheda Green Theory</title>
@@ -26,22 +26,6 @@
   --tint:13%; --tint-ink:#000; --tint-mix:78%;
   --ease:cubic-bezier(.32,.72,0,1);
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#000000; --surface:#161618; --raise:#262628; --tile:#262628; --sheet:#161618;
-  --ink:#FFFFFF; --muted:#9E9EA0; --line:#262628; --line2:#3A3A3C;
-  --btn:#D8FF00; --btn-ink:#111111; --focus:#D8FF00; --bar:#D8FF00;
-  --g1t:#FF6B5B; --g2t:#33D6BC; --g3t:#8A9DFF; --g4t:#B490FF;
-  --hero:#D8FF00; --hero-ink:#111111; --hero-acc:#111111;
-  --star:#D8FF00; --star-off:#3A3A3C; color-scheme:dark;
-  --glow:30%; --glass:rgba(44,44,46,.62); --glass-line:rgba(255,255,255,.13); --glass-shadow:0 12px 36px rgba(0,0,0,.55); --tint:24%; --tint-ink:#fff; --tint-mix:58%}}
-:root[data-theme="dark"]{
-  --bg:#000000; --surface:#161618; --raise:#262628; --tile:#262628; --sheet:#161618;
-  --ink:#FFFFFF; --muted:#9E9EA0; --line:#262628; --line2:#3A3A3C;
-  --btn:#D8FF00; --btn-ink:#111111; --focus:#D8FF00; --bar:#D8FF00;
-  --g1t:#FF6B5B; --g2t:#33D6BC; --g3t:#8A9DFF; --g4t:#B490FF;
-  --hero:#D8FF00; --hero-ink:#111111; --hero-acc:#111111;
-  --star:#D8FF00; --star-off:#3A3A3C; color-scheme:dark;
-  --glow:30%; --glass:rgba(44,44,46,.62); --glass-line:rgba(255,255,255,.13); --glass-shadow:0 12px 36px rgba(0,0,0,.55); --tint:24%; --tint-ink:#fff; --tint-mix:58%}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
@@ -337,6 +321,44 @@ dialog.full{margin:0;width:100%;max-width:none;height:100%;max-height:none;borde
   @keyframes sheetup{from{transform:translateY(60px);opacity:0}}
   @keyframes fadein{from{opacity:0}}
 }
+/* Tema Champagne (2026-11-03, scelto da giulio): nero quasi puro, un solo accento oro champagne, titoli con le grazie.
+   Sempre scuro, anche con l'iPhone in modalità chiara. */
+
+h1,h2,h3,.num,.hello,.selname,.apphead h1,summary,.chead b,.top2 b,.cert .big,.done-msg,.opt .hd,.rate .lbl,.primary,.jrate,.ycount b,.day .dd,.chip,.kgbox input,.reps button,.hist .d.tile b,.wmid h2{font-family:var(--body)!important;text-transform:none!important;letter-spacing:-.025em}
+.chip{font-size:9px!important;letter-spacing:-.02em!important;overflow-wrap:normal!important}
+.hero::before,.hero::after{display:none}
+:root{--bg:#000;--surface:#0D0D0D;--raise:#1A1918;--tile:#1A1918;--sheet:#0D0D0D;--ink:#EDE6DA;--muted:#8A847A;--line:#1E1D1B;--line2:#33312D;
+--btn:#C9A96E;--btn-ink:#111;--focus:#C9A96E;--bar:#C9A96E;--volt:#C9A96E;--on-volt:#111;--hot:#D9805F;--hero:#000;--hero-ink:#EDE6DA;--hero-acc:#C9A96E;
+--g1:#B5644F;--g2:#5E8C78;--g3:#5C719E;--g4:#86709E;--g1t:#E09A85;--g2t:#9CC7B2;--g3t:#9DB0DA;--g4t:#BCA6D8;--star:#C9A96E;--star-off:#33312D;
+--glow:0%;--glass:rgba(18,18,17,.82);--glass-line:rgba(201,169,110,.25);--tint:26%;--tint-ink:#fff;--tint-mix:55%;color-scheme:dark}
+body{font-weight:300} .apphead h1{font-weight:300;letter-spacing:.3em!important;font-size:15px;text-transform:uppercase!important}
+.avatar{background:transparent;border:1px solid var(--hero-acc);color:var(--hero-acc);font-weight:300}
+.hello{font-weight:200;font-size:52px;line-height:1;letter-spacing:-.03em} .hello span{color:var(--hero-acc);font-weight:200}
+.hero{border-radius:0;padding:24px 20px 40px;text-align:center} .hero p{margin-inline:auto}
+.ycount b{font-weight:200;font-size:54px;color:var(--volt)} h2,.wmid h2{font-weight:300}
+.panel,.ex,.bars,.top2>div,.kpi,.crow,details{background:var(--surface);border:1px solid var(--line);border-radius:26px}
+.pick,.pick.vuota{background:radial-gradient(120% 90% at 85% 0%,color-mix(in srgb,var(--dc) 45%,#000),#0D0D0D 70%);box-shadow:inset 0 0 0 1px rgba(201,169,110,.22);border-radius:30px}
+.pick::before{display:none} .selname{font-weight:300;font-size:38px} .selwrap::after{background-color:rgba(201,169,110,.2)}
+.seg button{background:transparent;box-shadow:inset 0 0 0 1px rgba(237,230,218,.25)} .seg button[aria-pressed="true"]{background:var(--volt);color:#111}
+.day.today .dd{background:transparent;box-shadow:inset 0 0 0 1px var(--volt);color:var(--volt)} .day .dd{font-weight:300}
+.sets{background:transparent;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--dc) 60%,transparent)} .sets .num{font-weight:300}
+.primary,.endbtn{font-weight:400;letter-spacing:.12em;text-transform:uppercase!important;font-size:15px} .tick{font-weight:300} .ex-name{font-weight:400}
+:root{--bg:#0A0A0A;--surface:#121110;--raise:#1C1A17;--tile:#1C1A17;--sheet:#121110;--ink:#F1EBDF;--muted:#8E877A;--line:#211F1B;--line2:#3A362F;
+--btn:#E6BE8A;--btn-ink:#1A140A;--focus:#E6BE8A;--bar:#E6BE8A;--volt:#E6BE8A;--on-volt:#1A140A;--hero:#0A0A0A;--hero-ink:#F1EBDF;--hero-acc:#E6BE8A;
+--star:#E6BE8A;--star-off:#3A362F;--glass:rgba(18,17,16,.82);--glass-line:#E6BE8A44;color-scheme:dark;
+--g1:#A85A47;--g2:#4F8270;--g3:#53689A;--g4:#7E6597;--g1t:#E0A08C;--g2t:#9FCBB6;--g3t:#A3B5DE;--g4t:#C3ADDD;--tint:26%;--tint-ink:#fff;--tint-mix:55%}
+.pick,.pick.vuota{background:radial-gradient(120% 90% at 85% 0%,color-mix(in srgb,var(--dc) 45%,#0A0A0A),#121110 70%);box-shadow:inset 0 0 0 1px #E6BE8A38;color:var(--ink)}
+.pick .sugg,.pick .pwhy,.pick .daynote{color:var(--muted)} .pick .sugg b{color:var(--ink)} .seg button{color:var(--ink);box-shadow:inset 0 0 0 1px #F1EBDF40}
+.seg button[aria-pressed="true"]{background:var(--volt);color:var(--on-volt)} .selwrap::after{background-color:#E6BE8A33}
+.avatar{border-color:var(--hero-acc);color:var(--hero-acc)} .apphead{background:#0A0A0A;color:#F1EBDF}
+h1,h2,h3,.hello,.selname,.wmid h2,.ycount b,.top2 b,.chead b,.cert .big,summary{font-family:ui-serif,"New York","Iowan Old Style",Georgia,serif!important;letter-spacing:-.01em!important}
+.hello{font-weight:400;font-style:italic} .hello span{font-style:normal} .selname{font-weight:400}
+.apphead h1,.eyebrow,.sets small,.day .dn,.ctitle{letter-spacing:.22em!important;text-transform:uppercase!important;font-size:10.5px} .apphead h1{font-size:13px}
+.hello span,.ycount b{background:linear-gradient(100deg,#B8925A,#F3D9A4 45%,#C9A06A);-webkit-background-clip:text;background-clip:text;color:transparent}
+.primary,.endbtn{background:linear-gradient(100deg,#B8925A,#F3D9A4 50%,#C9A06A);color:#1A140A}
+:root{--glass-shadow:0 12px 36px rgba(0,0,0,.55)}
+.wmid .eyebrow{letter-spacing:0!important;text-transform:none!important;font-size:12px}
+.box,.boxes .bl b,.cert .facts .num{font-family:var(--body)!important}
 </style>
 
 <div class="demobar" id="demoBar" hidden><span><b>Esempio</b>: un anno di allenamenti finti, non viene salvato nulla.</span><button type="button" class="ghost" id="demoExit">Esci</button></div>
@@ -387,7 +409,7 @@ dialog.full{margin:0;width:100%;max-width:none;height:100%;max-height:none;borde
     <summary>Backup e note</summary>
     <p class="sync" id="yinfo"></p>
     <p class="sync" id="sync"></p>
-    <p class="sync">Versione app <b>5b0a1e</b></p>
+    <p class="sync">Versione app <b>02a0df</b></p>
     <ul id="notes"></ul>
     <p>Il backup copia tutto lo storico come testo. Incollalo qui sotto su un altro dispositivo e premi Importa per unirlo.</p>
     <div class="row"><button class="ghost" type="button" id="bkCopy">Copia backup</button></div>
