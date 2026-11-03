@@ -778,7 +778,12 @@ function renderStats(){
   document.querySelectorAll('#rng button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.r === ui.range));
   const st = stats(ui.range);
   if (!st.ss.length) { $('statbody').innerHTML = '<div class="empty">Ancora nessun allenamento in questo periodo. Quando premi <b>Termina</b>, qui vedi quale gruppo alleni di più e quale alleni meglio. <button type="button" class="linkbtn" id="demoGo">Guarda un esempio</button></div>'; return; }
-  const rows = DAYS.map(d => ({d, n: st.ss.filter(x => x.day === d.id).length, q: avgQ(st.ss.filter(x => x.day === d.id))})).sort((a, b) => b.n - a.n);
+  // statistiche: Gambe A e Gambe B contano come un'unica voce "Gambe" (i dati salvati non cambiano)
+  const SG = {g4: 'g2'}, grp = d => SG[d.id] || d.id;
+  const rows = DAYS.filter(d => !SG[d.id]).map(d => {
+    const ids = DAYS.filter(x => grp(x) === d.id).map(x => x.id), l = st.ss.filter(x => ids.includes(x.day));
+    return {d: ids.length > 1 ? Object.assign({}, d, {nome: 'Gambe'}) : d, n: l.length, q: avgQ(l)};
+  }).sort((a, b) => b.n - a.n);
   const max = rows[0].n || 1, best = rows.filter(r => r.q !== null).sort((a, b) => b.q - a.q || b.n - a.n)[0];
   const nm = d => '<b class="t-' + d.id + '">' + esc(d.nome) + '</b>';
   let h = '<div class="top2"><div><small>Alleni di più</small>' + nm(rows[0].d) + '<span>' + rows[0].n + (rows[0].n === 1 ? ' sessione' : ' sessioni') + '</span></div>' +
