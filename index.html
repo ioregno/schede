@@ -183,6 +183,14 @@ details .sync{margin:14px 0 0}
 .rate .st{font-size:26px;padding:2px 1px}
 .rate .ghost{padding:13px 15px;font-size:13px;background:var(--ink);color:var(--bg);border:0}
 
+/* due riquadri sotto il saluto: allenamenti dell'anno e del mese */
+.ytiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:360px;margin:20px auto 0}
+.ytiles > div{border:1px solid var(--line2);border-radius:22px;padding:14px 12px 12px;display:flex;flex-direction:column;align-items:center;gap:4px;background:rgba(255,255,255,.03)}
+.ytiles small{font:600 10.5px/1.2 var(--body);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.ytiles b{font:400 46px/1 ui-serif,"New York","Iowan Old Style",Georgia,serif;font-variant-numeric:tabular-nums;background:linear-gradient(100deg,#B8925A,#F3D9A4 45%,#C9A06A);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ytiles span{font:500 12px/1.2 var(--body);color:var(--muted)}
+.fdet summary small{margin-left:auto;font:500 13px/1 var(--body);color:var(--muted);letter-spacing:0}
+.fdet[open] #fotoBody{margin-top:16px}
 /* statistiche a blocchi */
 #statbody{display:flex;flex-direction:column;gap:24px}
 .sblock{display:flex;flex-direction:column;gap:10px}
@@ -421,10 +429,11 @@ h1,h2,h3,.hello,.selname,.wmid h2,.ycount b,.top2 b,.chead b,.cert .big,summary{
 
 <div class="demobar" id="demoBar" hidden><span><b>Esempio</b>: un anno di allenamenti finti, non viene salvato nulla.</span><button type="button" class="ghost" id="demoExit">Esci</button></div>
 <header class="apphead"><h1>Scheda</h1><span class="avatar" aria-hidden="true">G</span></header>
-<section class="hero" aria-label="Saluto"><div class="hello" id="hello">Ciao<span>Giulio</span></div><p id="heroSub"></p></section>
+<section class="hero" aria-label="Saluto"><div class="hello" id="hello">Ciao<span>Giulio</span></div><p id="heroSub"></p>
+  <div class="ytiles" aria-label="Allenamenti fatti"><div><small id="yLab">Quest'anno</small><b id="yN">0</b><span>allenamenti</span></div><div><small id="mLab">Questo mese</small><b id="mN">0</b><span>allenamenti</span></div></div></section>
 <div class="wrap" id="app">
   <section class="wsec panel" aria-label="Settimana">
-    <div class="phead"><div class="ycount" id="ycount"></div><div class="boxes" id="boxes"></div></div>
+    <div class="phead"><div class="eyebrow">Obiettivo settimana</div><div class="boxes" id="boxes"></div></div>
     <div class="wnav">
       <button type="button" class="wbtn" id="wPrev" aria-label="Settimana precedente">‹</button>
       <div class="wmid"><h2 id="wk">Settimana</h2><div class="eyebrow"><span id="wkrange"></span> · <span id="yleft"></span></div></div>
@@ -463,10 +472,10 @@ h1,h2,h3,.hello,.selname,.wmid h2,.ycount b,.top2 b,.chead b,.cert .big,summary{
     <ul class="hist" id="hist"></ul>
   </section>
 
-  <section aria-label="Foto progressi" id="fotoSec">
-    <div class="eyebrow">Progressi</div><h2>Foto progressi</h2>
+  <details id="fotoSec" class="fdet">
+    <summary>Foto progressi<small id="fotoN"></small></summary>
     <div id="fotoBody"></div>
-  </section>
+  </details>
 
   <details>
     <summary>Backup e note</summary>
@@ -750,7 +759,9 @@ function renderWeek(){
   $('yleft').innerHTML = gl ? '<b>' + gl + '</b> ' + (gl === 1 ? 'giorno' : 'giorni') + ' alla fine del ' + t.getFullYear() : 'ultimo giorno del ' + t.getFullYear();
   const y0 = t.getFullYear() + '-01-01', mine = sorted().map(q => q.date), first = mine[0] && mine[0] > y0 ? mine[0] : (mine[0] ? y0 : tIso);
   const pre = demo || first <= y0 ? 0 : Math.round(diffDays(y0, first) / 7 * PRE_SETT), reg = state.sessions.filter(q => q.date >= y0).length;
-  $('ycount').innerHTML = '<b>' + (pre + reg) + '</b><span>volte<br>quest\'anno</span>';
+  const m0 = tIso.slice(0, 8) + '01', mN = state.sessions.filter(q => q.date >= m0 && q.date <= tIso).length;
+  $('yLab').textContent = 'Nel ' + t.getFullYear(); $('yN').textContent = pre + reg; $('yN').nextElementSibling.textContent = pre + reg === 1 ? 'allenamento' : 'allenamenti';
+  $('mLab').textContent = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'][t.getMonth()]; $('mN').textContent = mN; $('mN').nextElementSibling.textContent = mN === 1 ? 'allenamento' : 'allenamenti';
   $('yinfo').innerHTML = 'Allenamenti quest\'anno: <b>' + (pre + reg) + '</b>' + (pre ? ' (' + pre + ' stimate da gennaio al ' + fmt(first) + ', circa ' + String(PRE_SETT).replace('.', ',') + ' a settimana, più ' + reg + ' segnate nell\'app)' : '');
   $('boxes').innerHTML = bx + '<span class="bl"><b>' + n + '</b>/' + OBIETTIVO + '</span>';
   $('boxes').setAttribute('aria-label', n + ' allenamenti su ' + OBIETTIVO + ' questa settimana');
@@ -1122,6 +1133,7 @@ function renderFotoBtn(){
   (FLU || []).forEach(u => URL.revokeObjectURL(u)); FLU = [];
   $('fotoSec').hidden = !!demo;
   const l = demo || !FL ? [] : FL.map(f => Object.assign({}, f, {d: fDate(f)})).sort((a, b) => a.d < b.d ? 1 : a.d > b.d ? -1 : b.at - a.at);
+  $('fotoN').textContent = l.length ? l.length + (l.length === 1 ? ' foto' : ' foto') : '';
   if (!l.length) { el.innerHTML = '<div class="empty">Quando premi <b>Termina</b> puoi aggiungere una foto. Qui le rivedi e confronti la prima con l\'ultima.</div>'; return; }
   el.innerHTML = '<div class="fprev">' + l.slice(0, 3).map(f => { const u = URL.createObjectURL(f.img); FLU.push(u); return '<button type="button" data-fopen="' + f.id + '"><img src="' + u + '" alt="Foto del ' + fmt(f.d) + '"><span>' + fmt(f.d) + '</span></button>'; }).join('') + '</div>' +
     '<button type="button" class="ghost fotobtn" id="fotoGo">' + (l.length > 1 ? 'Vedi tutte e confronta · ' + l.length : 'Apri la foto') + '</button>';
