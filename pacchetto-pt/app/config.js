@@ -3,7 +3,7 @@
 //   versione   aumentala (2, 3...) ogni volta che cambi questo file o le foto: i telefoni scaricano la copia nuova
 //   app        nome sotto l'icona e in alto nell'app
 //   coach      il tuo nome;  palestra  nome della palestra
-//   colore     colore principale, es. "#D8FF00"
+//   colore     colore principale, es. "#E6BE8A" (oro); vuoto = colore del tema
 //   whatsapp   tuo numero con prefisso, es. "393331234567": i clienti ti mandano il resoconto lì
 //   indirizzo  (facoltativo) indirizzo dell'app online, es. "https://mario-pt.netlify.app/"
 //   gruppi     muscoli tra cui scegliere
@@ -15,7 +15,7 @@ var CONFIG = {
  "coach": "Il tuo coach",
  "indirizzo": "",
  "palestra": "Green Theory",
- "colore": "#D8FF00",
+ "colore": "#E6BE8A",
  "whatsapp": "",
  "gruppi": [
   "Petto",

@@ -72,7 +72,8 @@ const uid = () => 'c' + Date.now().toString(36) + Math.random().toString(36).sli
 
 // colore del coach, come nell'app del cliente
 (function(){
-  const c = /^#[0-9a-f]{6}$/i.test(C.colore || '') ? C.colore : '#D8FF00';
+  if (!/^#[0-9a-f]{6}$/i.test(C.colore || '')) return;   // senza colore resta quello del tema
+  const c = C.colore;
   const n = parseInt(c.slice(1), 16), lum = (0.299 * (n >> 16) + 0.587 * (n >> 8 & 255) + 0.114 * (n & 255)) / 255;
   document.documentElement.style.setProperty('--accent', c);
   document.documentElement.style.setProperty('--on-accent', lum < 0.6 ? '#FFFFFF' : '#111111');

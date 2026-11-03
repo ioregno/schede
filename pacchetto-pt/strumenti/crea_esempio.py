@@ -79,7 +79,7 @@ esempio = {"id": "esempio", "cliente": "Giulio", "obiettivo": 4, "varC": "Corpo 
            "giorni": giorni, "note": NOTE_FINALI}
 
 cfg = {
-    "versione": "1", "app": "Scheda", "coach": "Il tuo coach", "indirizzo": "", "palestra": "Green Theory", "colore": "#D8FF00", "whatsapp": "",
+    "versione": "1", "app": "Scheda", "coach": "Il tuo coach", "indirizzo": "", "palestra": "Green Theory", "colore": "#E6BE8A", "whatsapp": "",
     "gruppi": GRUPPI, "macchine": macchine, "esempio": esempio,
 }
 txt = ("// CONFIGURAZIONE DELL'APP: l'unico file da cambiare (vedi GUIDA-PT.md).\n"
@@ -87,7 +87,7 @@ txt = ("// CONFIGURAZIONE DELL'APP: l'unico file da cambiare (vedi GUIDA-PT.md).
        "//   versione   aumentala (2, 3...) ogni volta che cambi questo file o le foto: i telefoni scaricano la copia nuova\n"
        "//   app        nome sotto l'icona e in alto nell'app\n"
        "//   coach      il tuo nome;  palestra  nome della palestra\n"
-       "//   colore     colore principale, es. \"#D8FF00\"\n"
+       "//   colore     colore principale, es. \"#E6BE8A\" (oro); vuoto = colore del tema\n"
        "//   whatsapp   tuo numero con prefisso, es. \"393331234567\": i clienti ti mandano il resoconto lì\n"
        "//   indirizzo  (facoltativo) indirizzo dell'app online, es. \"https://mario-pt.netlify.app/\"\n"
        "//   gruppi     muscoli tra cui scegliere\n"
