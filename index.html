@@ -226,6 +226,10 @@ details .sync{margin:14px 0 0}
 .track{height:10px;border-radius:999px;background:var(--line);overflow:hidden}
 .fill{height:100%;border-radius:999px;background:var(--dc,var(--bar));min-width:0}
 .brow.zero{color:var(--muted)}
+.fsplit{height:100%;display:flex;gap:2px}
+.fsplit .fill{min-width:4px}
+.sk{font-style:normal;font-weight:700}
+.bsplit{display:block;margin-top:3px;font:500 11px/1.2 var(--body);color:var(--muted)}
 .brow .v{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
 .empty{font:500 14px/1.5 var(--body);color:var(--muted);background:var(--surface);border-radius:var(--r);padding:18px}
 
@@ -805,13 +809,17 @@ function renderStats(){
   const SG = {g4: 'g2'}, grp = d => SG[d.id] || d.id;
   const rows = DAYS.filter(d => !SG[d.id]).map(d => {
     const ids = DAYS.filter(x => grp(x) === d.id).map(x => x.id), l = st.ss.filter(x => ids.includes(x.day));
-    return {d: ids.length > 1 ? Object.assign({}, d, {nome: 'Gambe'}) : d, n: l.length, q: avgQ(l)};
+    return {d: ids.length > 1 ? Object.assign({}, d, {nome: 'Gambe'}) : d, n: l.length, q: avgQ(l),
+      parts: ids.length > 1 ? ids.map(id => ({id, k: BY[id].breve.replace(/^Gambe /, ''), n: st.ss.filter(x => x.day === id).length})) : null};
   }).sort((a, b) => b.n - a.n);
   const max = rows[0].n || 1, best = rows.filter(r => r.q !== null).sort((a, b) => b.q - a.q || b.n - a.n)[0];
   const nm = d => '<b class="t-' + d.id + '">' + esc(d.nome) + '</b>';
-  let h = '<div class="top2"><div><small>Alleni di più</small>' + nm(rows[0].d) + '<span>' + rows[0].n + (rows[0].n === 1 ? ' sessione' : ' sessioni') + '</span></div>' +
+  const split = r => r.parts ? r.parts.map(p => '<i class="sk t-' + p.id + '">' + esc(p.k) + '</i> ' + p.n).join(' · ') : '';
+  let h = '<div class="top2"><div><small>Alleni di più</small>' + nm(rows[0].d) + '<span>' + rows[0].n + (rows[0].n === 1 ? ' sessione' : ' sessioni') + (rows[0].parts ? '<br>' + split(rows[0]) : '') + '</span></div>' +
     '<div><small>Alleni meglio</small>' + (best ? nm(best.d) + '<span>' + fq(best.q) + ' ★ di media</span>' : '<span>Dai le stelle a fine allenamento</span>') + '</div></div>';
-  h += '<div class="bars">' + rows.map(r => '<div class="brow' + (r.n ? '' : ' zero') + '"><span>' + esc(r.d.nome) + '</span><div class="track"><div class="fill c-' + r.d.id + '" style="width:' + (r.n / max * 100).toFixed(1) + '%"></div></div><span class="v">' + r.n + (r.n === 1 ? ' sessione' : ' sessioni') + '</span></div>').join('') + '</div>';
+  const fill = r => !r.parts ? '<div class="fill c-' + r.d.id + '" style="width:' + (r.n / max * 100).toFixed(1) + '%"></div>'
+    : '<div class="fsplit" style="width:' + (r.n / max * 100).toFixed(1) + '%">' + r.parts.filter(p => p.n).map(p => '<div class="fill c-' + p.id + '" style="flex:' + p.n + '"></div>').join('') + '</div>';
+  h += '<div class="bars">' + rows.map(r => '<div class="brow' + (r.n ? '' : ' zero') + '"><span>' + esc(r.d.nome) + (r.parts && r.n ? '<small class="bsplit">' + split(r) + '</small>' : '') + '</span><div class="track">' + fill(r) + '</div><span class="v">' + r.n + (r.n === 1 ? ' sessione' : ' sessioni') + '</span></div>').join('') + '</div>';
   h += cardioBlock(st.ss);
   const a = st.ss.filter(s => s.abs); if (a.length) h += '<p class="extra">Addominali extra in ' + a.length + (a.length === 1 ? ' sessione' : ' sessioni') + '.</p>';
   $('statbody').innerHTML = h;
