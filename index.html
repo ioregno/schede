@@ -183,6 +183,38 @@ details .sync{margin:14px 0 0}
 .rate .st{font-size:26px;padding:2px 1px}
 .rate .ghost{padding:13px 15px;font-size:13px;background:var(--ink);color:var(--bg);border:0}
 
+/* statistiche a blocchi */
+#statbody{display:flex;flex-direction:column;gap:24px}
+.sblock{display:flex;flex-direction:column;gap:10px}
+.shd{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:0 4px}
+.shd span{font:600 12px/1 var(--body);text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.shd small{font:500 12px/1 var(--body);color:var(--muted)}
+.scard{background:var(--surface);border:1px solid var(--line);border-radius:26px;padding:4px 14px}
+.srow{display:flex;align-items:center;gap:12px;padding:12px 0}
+.srow + .srow{border-top:1px solid var(--line)}
+.srow.zero{opacity:.55}
+.smain{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
+.sline{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.sline > b{font:700 16px/1.2 var(--body)}
+.sline .v{font:500 12px/1 var(--body);color:var(--muted);white-space:nowrap;display:flex;align-items:baseline;gap:5px}
+.sline .v b{font:700 20px/1 var(--body);color:var(--ink);font-variant-numeric:tabular-nums}
+.srow.top .sline .v b{color:var(--star)}
+.fig{width:46px;height:56px;flex:none;border-radius:16px;background:var(--raise);display:grid;place-items:center;overflow:hidden}
+.fig svg{width:26px;height:44px}
+.cdates .more{background:transparent;color:var(--muted);font-weight:500}
+.fig img{width:100%;height:100%;object-fit:cover}
+.fig .b{fill:var(--line2)}
+.fig .h{fill:var(--dc)}
+.pos{width:24px;flex:none;text-align:center;font:700 14px/1 var(--body);color:var(--muted)}
+.srow.top .pos{color:var(--star)}
+.sbar{position:relative;display:inline-block;color:var(--star-off);font-size:14px;letter-spacing:1px;line-height:1}
+.sbar i{position:absolute;left:0;top:0;overflow:hidden;white-space:nowrap;color:var(--star);font-style:normal}
+.sempty{font:500 13px/1.45 var(--body);color:var(--muted);margin:0;padding:12px 2px}
+.sblock > .sempty{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:14px 16px}
+.fprev{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.fprev button{border:0;background:none;padding:0;color:inherit;display:flex;flex-direction:column;gap:6px;text-align:left}
+.fprev img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:16px;background:var(--raise);display:block}
+.fprev span{font:600 12px/1.2 var(--body);color:var(--muted)}
 /* foto progressi */
 .pfoto{display:flex;flex-direction:column;gap:10px}
 .pfoto img{display:block;width:100%;max-height:46vh;object-fit:contain;border-radius:18px;background:var(--raise)}
@@ -423,7 +455,11 @@ h1,h2,h3,.hello,.selname,.wmid h2,.ycount b,.top2 b,.chead b,.cert .big,summary{
   <section aria-label="Storico">
     <div class="eyebrow">Ultimi allenamenti</div><h2>Storico</h2>
     <ul class="hist" id="hist"></ul>
-    <button type="button" class="ghost fotobtn" id="fotoGo" hidden>Foto progressi</button>
+  </section>
+
+  <section aria-label="Foto progressi" id="fotoSec">
+    <div class="eyebrow">Progressi</div><h2>Foto progressi</h2>
+    <div id="fotoBody"></div>
   </section>
 
   <details>
@@ -792,36 +828,71 @@ function cardioLine(ss){
   return ' Cardio <b>' + tot + ' min</b>' + (Object.keys(by).length ? ' (' + Object.keys(by).map(k => CARDIO[k].toLowerCase() + ' ' + by[k]).join(', ') + ')' : '') + ' in ' + c.length + ' sessioni' +
     (a.length ? ', addominali extra in ' + a.length + ' sessioni' : '') + '.';
 }
+// figurina del corpo con evidenziati i muscoli di ogni allenamento (se arriva un'immagine in ICONE[id] si usa quella)
+const ICONE = {};
+const FIGP = {
+  head: '<circle cx="20" cy="6.5" r="5"/>',
+  sh: '<rect x="7.5" y="13.5" width="7" height="7" rx="3.5"/><rect x="25.5" y="13.5" width="7" height="7" rx="3.5"/>',
+  chest: '<rect x="13.8" y="13.5" width="6" height="9.5" rx="2.6"/><rect x="20.2" y="13.5" width="6" height="9.5" rx="2.6"/>',
+  abs: '<rect x="14.5" y="23.8" width="11" height="10.5" rx="3"/>',
+  arms: '<rect x="6.4" y="21.2" width="5.4" height="11" rx="2.7"/><rect x="28.2" y="21.2" width="5.4" height="11" rx="2.7"/><rect x="5.6" y="33" width="4.8" height="10" rx="2.4"/><rect x="29.6" y="33" width="4.8" height="10" rx="2.4"/>',
+  thigh: '<rect x="13.6" y="35.2" width="6.2" height="14.5" rx="3.1"/><rect x="20.2" y="35.2" width="6.2" height="14.5" rx="3.1"/>',
+  calf: '<rect x="14.2" y="50.6" width="5.2" height="12" rx="2.6"/><rect x="20.6" y="50.6" width="5.2" height="12" rx="2.6"/>'
+};
+const FIGH = {g1: ['chest', 'arms'], g2: ['thigh', 'calf'], g3: ['sh', 'chest'], g4: ['thigh', 'calf']};
+function fig(id){
+  if (ICONE[id]) return '<span class="fig c-' + id + '"><img src="' + ICONE[id] + '" alt=""></span>';
+  const on = FIGH[id] || [];
+  return '<span class="fig c-' + id + '" aria-hidden="true"><svg viewBox="0 0 40 64">' + Object.keys(FIGP).map(k => '<g class="' + (on.includes(k) ? 'h' : 'b') + '">' + FIGP[k] + '</g>').join('') + '</svg></span>';
+}
+const sessN = n => n + (n === 1 ? ' sessione' : ' sessioni');
+const CHIPS = 6, more = l => l.length > CHIPS ? '<span class="more">+' + (l.length - CHIPS) + ' prima</span>' : '';
+const dmy = d => { const x = parse(d); return x.getDate() + '/' + (x.getMonth() + 1); };
+function starBar(q){ return '<span class="sbar" aria-label="' + fq(q) + ' stelle su 3">★★★<i style="width:' + (q / 3 * 100).toFixed(1) + '%">★★★</i></span>'; }
 function cardioBlock(ss){
-  const dm = d => { const x = parse(d); return x.getDate() + '/' + (x.getMonth() + 1); };
+  const c = ss.filter(s => s.cardio), tot = c.reduce((x, s) => x + s.cardio.m, 0);
   const rows = Object.keys(CARDIO).map(k => {
-    const l = ss.filter(s => s.cardio && s.cardio.t === k).sort((a, b) => a.date < b.date ? 1 : -1);
+    const l = c.filter(s => s.cardio.t === k).sort((a, b) => a.date < b.date ? 1 : -1);
     return l.length ? '<div class="crow"><div class="chead"><b>' + CARDIO[k] + '</b><span>' + l.length + (l.length === 1 ? ' volta' : ' volte') + ' · ' + l.reduce((x, s) => x + s.cardio.m, 0) + ' min</span></div>' +
-      '<div class="cdates">' + l.map(s => '<span><b>' + s.cardio.m + '′</b> <small>(' + dm(s.date) + ')</small></span>').join('') + '</div></div>' : '';
+      '<div class="cdates">' + l.slice(0, CHIPS).map(s => '<span><b>' + s.cardio.m + '′</b> <small>(' + dmy(s.date) + ')</small></span>').join('') + more(l) + '</div></div>' : '';
   }).join('');
-  return rows ? '<div class="cardio"><small class="ctitle">Cardio</small>' + rows + '</div>' : '';
+  return '<div class="sblock"><div class="shd"><span>Cardio</span><small>' + (c.length ? tot + ' min in ' + sessN(c.length) : '') + '</small></div>' +
+    (rows || '<p class="sempty">Nessun cardio in questo periodo. Lo segni quando premi Termina.</p>') + '</div>';
+}
+const ABSS = {rip: 'rip', serie: 'serie', min: 'min'};
+function absBlock(ss){
+  const a = ss.filter(s => s.abs).sort((x, y) => x.date < y.date ? 1 : -1), by = {};
+  a.forEach(s => by[s.abs.u] = (by[s.abs.u] || 0) + s.abs.n);
+  return '<div class="sblock"><div class="shd"><span>Addominali</span><small>' + (a.length ? sessN(a.length) : '') + '</small></div>' +
+    (a.length ? '<div class="crow"><div class="chead"><b>Totale</b><span>' + Object.keys(ABSU).filter(u => by[u]).map(u => by[u] + ' ' + ABSU[u]).join(' · ') + '</span></div>' +
+      '<div class="cdates">' + a.slice(0, CHIPS).map(s => '<span><b>' + s.abs.n + '</b> ' + ABSS[s.abs.u] + ' <small>(' + dmy(s.date) + ')</small></span>').join('') + more(a) + '</div></div>'
+      : '<p class="sempty">Nessun addominale extra in questo periodo. Li segni quando premi Termina.</p>') + '</div>';
 }
 function renderStats(){
   document.querySelectorAll('#rng button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.r === ui.range));
   const st = stats(ui.range);
   if (!st.ss.length) { $('statbody').innerHTML = '<div class="empty">Ancora nessun allenamento in questo periodo. Quando premi <b>Termina</b>, qui vedi quale gruppo alleni di più e quale alleni meglio. <button type="button" class="linkbtn" id="demoGo">Guarda un esempio</button></div>'; return; }
-  // statistiche: Gambe A e Gambe B contano come un'unica voce "Gambe" (i dati salvati non cambiano)
+  // Gambe A e Gambe B contano come un'unica voce "Gambe" (i dati salvati non cambiano)
   const SG = {g4: 'g2'}, grp = d => SG[d.id] || d.id;
   const rows = DAYS.filter(d => !SG[d.id]).map(d => {
     const ids = DAYS.filter(x => grp(x) === d.id).map(x => x.id), l = st.ss.filter(x => ids.includes(x.day));
-    return {d: ids.length > 1 ? Object.assign({}, d, {nome: 'Gambe'}) : d, n: l.length, q: avgQ(l),
-      parts: ids.length > 1 ? ids.map(id => ({id, k: BY[id].breve.replace(/^Gambe /, ''), n: st.ss.filter(x => x.day === id).length})) : null};
+    return {d: ids.length > 1 ? Object.assign({}, d, {nome: 'Gambe'}) : d, n: l.length, q: avgQ(l), rated: l.filter(s => s.q).length,
+      parts: ids.length > 1 ? ids.map(id => { const pl = st.ss.filter(x => x.day === id); return {id, k: BY[id].breve.replace(/^Gambe /, ''), n: pl.length, q: avgQ(pl)}; }) : null};
   }).sort((a, b) => b.n - a.n);
-  const max = rows[0].n || 1, best = rows.filter(r => r.q !== null).sort((a, b) => b.q - a.q || b.n - a.n)[0];
-  const nm = d => '<b class="t-' + d.id + '">' + esc(d.nome) + '</b>';
-  const split = r => r.parts ? r.parts.map(p => '<i class="sk t-' + p.id + '">' + esc(p.k) + '</i> ' + p.n).join(' · ') : '';
-  let h = '<div class="top2"><div><small>Alleni di più</small>' + nm(rows[0].d) + '<span>' + rows[0].n + (rows[0].n === 1 ? ' sessione' : ' sessioni') + (rows[0].parts ? '<br>' + split(rows[0]) : '') + '</span></div>' +
-    '<div><small>Alleni meglio</small>' + (best ? nm(best.d) + '<span>' + fq(best.q) + ' ★ di media</span>' : '<span>Dai le stelle a fine allenamento</span>') + '</div></div>';
+  const max = rows[0].n || 1;
+  const split = (r, f) => r.parts.map(p => '<i class="sk t-' + p.id + '">' + esc(p.k) + '</i> ' + f(p)).join(' · ');
   const fill = r => !r.parts ? '<div class="fill c-' + r.d.id + '" style="width:' + (r.n / max * 100).toFixed(1) + '%"></div>'
     : '<div class="fsplit" style="width:' + (r.n / max * 100).toFixed(1) + '%">' + r.parts.filter(p => p.n).map(p => '<div class="fill c-' + p.id + '" style="flex:' + p.n + '"></div>').join('') + '</div>';
-  h += '<div class="bars">' + rows.map(r => '<div class="brow' + (r.n ? '' : ' zero') + '"><span>' + esc(r.d.nome) + (r.parts && r.n ? '<small class="bsplit">' + split(r) + '</small>' : '') + '</span><div class="track">' + fill(r) + '</div><span class="v">' + r.n + (r.n === 1 ? ' sessione' : ' sessioni') + '</span></div>').join('') + '</div>';
-  h += cardioBlock(st.ss);
-  const a = st.ss.filter(s => s.abs); if (a.length) h += '<p class="extra">Addominali extra in ' + a.length + (a.length === 1 ? ' sessione' : ' sessioni') + '.</p>';
+  let h = '<div class="sblock"><div class="shd"><span>Sessioni</span><small>' + sessN(st.ss.length) + ' in tutto</small></div><div class="scard">' +
+    rows.map((r, i) => '<div class="srow' + (r.n ? '' : ' zero') + (i === 0 && r.n ? ' top' : '') + '">' + fig(r.d.id) + '<div class="smain"><div class="sline"><b>' + esc(r.d.nome) + '</b><span class="v"><b>' + r.n + '</b> ' + (r.n === 1 ? 'sessione' : 'sessioni') + '</span></div>' +
+      (r.parts && r.n ? '<small class="bsplit">' + split(r, p => p.n) + '</small>' : '') + '<div class="track">' + fill(r) + '</div></div></div>').join('') + '</div></div>';
+  const rk = rows.filter(r => r.q !== null).sort((a, b) => b.q - a.q || b.n - a.n), nr = rows.filter(r => r.q === null && r.n);
+  h += '<div class="sblock"><div class="shd"><span>Classifica stelle</span><small>media di ogni allenamento</small></div><div class="scard">' +
+    (rk.length ? rk.map((r, i) => '<div class="srow rk' + (i === 0 ? ' top' : '') + '"><span class="pos">' + (i + 1) + '°</span>' + fig(r.d.id) + '<div class="smain"><div class="sline"><b>' + esc(r.d.nome) + '</b><span class="v">' + starBar(r.q) + ' <b>' + fq(r.q) + '</b></span></div>' +
+      '<small class="bsplit">' + (r.rated === r.n ? 'tutte votate' : r.rated + ' votate su ' + r.n) + (r.parts ? ' · ' + split(r, p => p.q === null ? '–' : fq(p.q) + ' ★') : '') + '</small></div></div>').join('')
+      : '<p class="sempty">Dai le stelle a fine allenamento e qui vedi quale fai meglio.</p>') +
+    (nr.length && rk.length ? '<p class="sempty">Senza voti: ' + nr.map(r => esc(r.d.nome)).join(', ') + '.</p>' : '') + '</div></div>';
+  h += cardioBlock(st.ss) + absBlock(st.ss);
   $('statbody').innerHTML = h;
 }
 
@@ -1031,8 +1102,17 @@ function fdb(){ return fdbP || (fdbP = new Promise((ok, ko) => { try { const q =
 function fdo(mode, fn){ return fdb().then(db => new Promise((ok, ko) => { const tx = db.transaction('foto', mode), q = fn(tx.objectStore('foto')); tx.oncomplete = () => ok(q && q.result); tx.onerror = () => ko(tx.error); tx.onabort = () => ko(tx.error); })); }
 const fotoGet = id => fdo('readonly', s => s.get(id)), fotoAll = () => fdo('readonly', s => s.getAll());
 const fotoPut = f => fdo('readwrite', s => s.put(f)), fotoDel = id => fdo('readwrite', s => s.delete(id));
-function fotoIndex(){ return fotoAll().then(l => { FOTO = {}; (l || []).forEach(f => FOTO[f.id] = f.date); renderFotoBtn(); }).catch(() => renderFotoBtn()); }
-function renderFotoBtn(){ const n = demo || !FOTO ? 0 : Object.keys(FOTO).length, b = $('fotoGo'); b.hidden = !n; b.textContent = 'Foto progressi · ' + n; }
+var FL = [], FLU = [];
+function fotoIndex(){ return fotoAll().then(l => { FOTO = {}; FL = (l || []).slice(); FL.forEach(f => FOTO[f.id] = f.date); renderFotoBtn(); }).catch(() => renderFotoBtn()); }
+function renderFotoBtn(){
+  const el = $('fotoBody'); if (!el) return;
+  (FLU || []).forEach(u => URL.revokeObjectURL(u)); FLU = [];
+  $('fotoSec').hidden = !!demo;
+  const l = demo || !FL ? [] : FL.map(f => Object.assign({}, f, {d: fDate(f)})).sort((a, b) => a.d < b.d ? 1 : a.d > b.d ? -1 : b.at - a.at);
+  if (!l.length) { el.innerHTML = '<div class="empty">Quando premi <b>Termina</b> puoi aggiungere una foto. Qui le rivedi e confronti la prima con l\'ultima.</div>'; return; }
+  el.innerHTML = '<div class="fprev">' + l.slice(0, 3).map(f => { const u = URL.createObjectURL(f.img); FLU.push(u); return '<button type="button" data-fopen="' + f.id + '"><img src="' + u + '" alt="Foto del ' + fmt(f.d) + '"><span>' + fmt(f.d) + '</span></button>'; }).join('') + '</div>' +
+    '<button type="button" class="ghost fotobtn" id="fotoGo">' + (l.length > 1 ? 'Vedi tutte e confronta · ' + l.length : 'Apri la foto') + '</button>';
+}
 function shrink(file){
   return new Promise((ok, ko) => {
     const u = URL.createObjectURL(file), im = new Image();
@@ -1090,7 +1170,7 @@ function openFotoOne(id){
     $('sheetF').scrollTop = 0;
   });
 }
-$('fotoGo').addEventListener('click', openFoto);
+$('fotoBody').addEventListener('click', e => { const o = e.target.closest('[data-fopen]'); if (o) { $('sheetF').innerHTML = ''; openFotoOne(o.dataset.fopen); if (!$('dlgF').open) $('dlgF').showModal(); return; } if (e.target.closest('#fotoGo')) openFoto(); });
 $('dlgF').addEventListener('close', () => { fClean(); fView = null; });
 $('dlgF').addEventListener('click', e => {
   const o = e.target.closest('[data-fopen]'); if (o) { openFotoOne(o.dataset.fopen); return; }
